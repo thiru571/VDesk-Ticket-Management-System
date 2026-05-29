@@ -202,9 +202,32 @@ export default function AppLayout() {
               </NavLink>
             );
           })}
+          
         </nav>
-        
+        <>
+         <div 
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid var(--border)', cursor: 'pointer' }}
+                onClick={() => navigate('/profile')}
+              >
+                <div className="hide-mobile" onClick={() => navigate('/profile')}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{user?.name || 'User'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ') || 'Role'}</div>
+                </div>
+                {/*  
+                <button 
+                  onClick={(e) => { e.stopPropagation(); logout(); }}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', alignItems: 'center', padding: '8px', marginLeft: '12px' }}
+                  title="Logout"
+                >
+                  <LogOut size={20} />
+                </button>
+                */}
+              </div>
+        </>
+          
         <div style={{ marginTop: 'auto', padding: '32px 24px', borderTop: '1px solid var(--border-light)' }}>
+              
+
           <button
             className="premium-nav-item"
             onClick={() => { setLoggingOut(true); setTimeout(logout, 800); }}
@@ -215,7 +238,9 @@ export default function AppLayout() {
               ? <><div className="spinner" style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#EF4444' }} /><span>Logging out...</span></>
               : <><i className="fa-solid fa-right-from-bracket" style={{ fontSize: '1.2rem' }} /><span>Logout</span></>}
           </button>
+         
         </div>
+        
       </aside>
 
       {/* PREMIUM MAIN WRAPPER */}
@@ -299,8 +324,8 @@ export default function AppLayout() {
                   )}
                 </AnimatePresence>
               </div>
-
-              <div 
+             
+              {/* <div 
                 style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid var(--border)', cursor: 'pointer' }}
                 onClick={() => navigate('/profile')}
               >
@@ -308,6 +333,7 @@ export default function AppLayout() {
                   <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{user?.name || 'User'}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ') || 'Role'}</div>
                 </div>
+                {/*  
                 <button 
                   onClick={(e) => { e.stopPropagation(); logout(); }}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', alignItems: 'center', padding: '8px', marginLeft: '12px' }}
@@ -315,7 +341,11 @@ export default function AppLayout() {
                 >
                   <LogOut size={20} />
                 </button>
-              </div>
+                
+              </div> */}
+
+               
+             
 
                {/* Status Toggle for Agents/Admins */}
                {(user?.role === 'support_agent' || user?.role === 'admin') && (

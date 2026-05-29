@@ -121,103 +121,398 @@ const verifyEmail = async (req, res, next) => {
  * POST /api/auth/send-otp
  * Public
  */
-const sendOtp = async (req, res, next) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const isAllowedDomain = normalizedEmail.endsWith('@vdartinc.com') || normalizedEmail.endsWith('@ndartinc.com');
+
+
+
+
+
+// ======================================================
+// SEND OTP
+// POST /api/auth/send-otp
+// ======================================================
+
+const sendOtp = async (req, res, next) => {
+
+  try {
+
+    const { email } = req.body;
+
+    // =========================
+    // Validate Email
+    // =========================
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    const normalizedEmail = email
+      .toLowerCase()
+      .trim();
+
+    // =========================
+    // Allow Only Company Emails
+    // =========================
+
+    const isAllowedDomain =
+      normalizedEmail.endsWith('@vdartinc.com') ||
+      normalizedEmail.endsWith('@ndartinc.com');
 
     if (!isAllowedDomain) {
-      return res.status(400).json({ success: false, message: 'Only @vdartinc.com or @ndartinc.com emails are permitted.' });
+      return res.status(400).json({
+        success: false,
+        message:
+          'Only @vdartinc.com or @ndartinc.com emails are permitted.'
+      });
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user || !user.isActive) return res.status(404).json({ success: false, message: 'No active account found for this email. Please contact your Admin.' });
+    // =========================
+    // Find User
+    // =========================
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+    const user = await User.findOne({
+      email: normalizedEmail
+    }).select(
+      '+otp +otpExpiry +otpAttempts +otpLockedUntil'
+    );
+
+    if (!user || !user.isActive) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'No active account found for this email.'
+      });
+    }
+
+    // =========================
+    // Generate OTP
+    // =========================
+
+    const otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    // =========================
+    // Hash OTP
+    // =========================
+
+    const hashedOtp = crypto
+      .createHash('sha256')
+      .update(String(otp).trim())
+      .digest('hex');
+
+    // =========================
+    // Save OTP
+    // =========================
 
     user.otp = hashedOtp;
-    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+    console.log('GENERATED OTP:', otp);
+
+    user.otpExpiry = new Date(
+      Date.now() + 5 * 60 * 1000
+    );
+
     user.otpAttempts = 0;
+
     user.otpLockedUntil = null;
-    await user.save({ validateBeforeSave: false });
+
+    await user.save({
+      validateBeforeSave: false
+    });
+
+    console.log('OTP SAVED SUCCESSFULLY');
+
+    // =========================
+    // Audit Log
+    // =========================
 
     try {
-      await AuditLog.create({ event: 'OTP_SENT', email: normalizedEmail, ip: req.ip, userAgent: req.headers['user-agent'] });
+
+      await AuditLog.create({
+        event: 'OTP_SENT',
+        email: normalizedEmail,
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      });
+
     } catch (logErr) {
-      console.error('❌ AuditLog write failed:', logErr.message);
+
+      console.error(
+        'AuditLog Error:',
+        logErr.message
+      );
     }
 
-    // Send OTP via email
+    // =========================
+    // Send Email
+    // =========================
+
     try {
-      await sendOtpEmail({ to: normalizedEmail, otp });
+
+      await sendOtpEmail({
+        to: normalizedEmail,
+        otp
+      });
+
     } catch (emailErr) {
-      console.error('❌ sendOtpEmail failed:', emailErr.message);
-      return res.status(500).json({ success: false, message: 'Failed to send OTP. Please try again later.' });
+
+      console.error(
+        'sendOtpEmail Error:',
+        emailErr.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          'Failed to send OTP email.'
+      });
     }
 
-    res.json({ success: true, message: 'OTP code sent! Check your email inbox.' });
-    console.log(`OTP for ${normalizedEmail}: ${otp} (for testing purposes)`); // Remove in production
+    // =========================
+    // Success Response
+    // =========================
+
+    return res.json({
+      success: true,
+      message:
+        'OTP sent successfully. Check your email.'
+    });
+
   } catch (err) {
+
+    console.error(
+      'SEND OTP ERROR:',
+      err
+    );
+
     next(err);
   }
 };
 
-/**
- * Step 2 of login — verify OTP and return token
- * POST /api/auth/verify-otp
- * Public
- */
-const verifyOtp = async (req, res, next) => {
+
+// ======================================================
+// VERIFY OTP
+// POST /api/auth/verify-otp
+// ======================================================
+
+ const verifyOtp = async (req, res, next) => {
+
   try {
+
     const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and code are required' });
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    console.log('VERIFY REQUEST:', req.body);
 
-    if (user.otpLockedUntil && user.otpLockedUntil > new Date()) {
-      const remainingMinutes = Math.ceil((user.otpLockedUntil - new Date()) / 60000);
-      return res.status(403).json({ success: false, message: `Account temporarily locked due to too many failed attempts. Try again in ${remainingMinutes} minutes or resend code.` });
+    // =========================
+    // Validate Input
+    // =========================
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Email and OTP are required'
+      });
     }
 
-    if (!user.otp) return res.status(400).json({ success: false, message: 'No code was requested. Please request a new one.' });
-    if (user.otpExpiry < new Date()) return res.status(400).json({ success: false, message: 'Your code has expired. Please request a new one.' });
+    const normalizedEmail = email
+      .toLowerCase()
+      .trim();
 
-    const hashedOtp = crypto.createHash('sha256').update(otp.trim()).digest('hex');
+    // =========================
+    // Find User
+    // =========================
+
+    const user = await User.findOne({
+      email: normalizedEmail
+    }).select(
+      '+otp +otpExpiry +otpAttempts +otpLockedUntil'
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // =========================
+    // Check Account Lock
+    // =========================
+
+    if (
+      user.otpLockedUntil &&
+      user.otpLockedUntil > new Date()
+    ) {
+
+      const remainingMinutes = Math.ceil(
+        (user.otpLockedUntil - new Date()) / 60000
+      );
+
+      return res.status(403).json({
+        success: false,
+        message:
+          `Account locked. Try again in ${remainingMinutes} minutes.`
+      });
+    }
+
+    // =========================
+    // Check OTP Exists
+    // =========================
+
+    if (!user.otp) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          'No OTP found. Please request a new OTP.'
+      });
+    }
+
+    // =========================
+    // Check OTP Expiry
+    // =========================
+
+    if (
+      !user.otpExpiry ||
+      user.otpExpiry < new Date()
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          'OTP expired. Please request a new OTP.'
+      });
+    }
+
+    // =========================
+    // Hash Entered OTP
+    // =========================
+
+    const hashedOtp = crypto
+      .createHash('sha256')
+      .update(String(otp).trim())
+      .digest('hex');
+
+    console.log(
+      'HASHED INPUT OTP:',
+      hashedOtp
+    );
+
+    console.log(
+      'DATABASE OTP:',
+      user.otp
+    );
+
+    // =========================
+    // Compare OTP
+    // =========================
+
     if (hashedOtp !== user.otp) {
+
       user.otpAttempts += 1;
 
-      await AuditLog.create({ event: 'OTP_FAILED', email: user.email, ip: req.ip, meta: { attempts: user.otpAttempts } });
+      // ======================
+      // Audit Log
+      // ======================
+
+      await AuditLog.create({
+        event: 'OTP_FAILED',
+        email: user.email,
+        ip: req.ip,
+        meta: {
+          attempts: user.otpAttempts
+        }
+      });
+
+      // ======================
+      // Lock Account
+      // ======================
 
       if (user.otpAttempts >= 3) {
-        user.otpLockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
-        await user.save({ validateBeforeSave: false });
-        await AuditLog.create({ event: 'OTP_LOCKED', email: user.email, ip: req.ip, meta: { lockedUntil: user.otpLockedUntil } });
-        return res.status(403).json({ success: false, message: 'Too many incorrect attempts. Your account is locked for 15 minutes. Please resend the code to unlock.' });
+
+        user.otpLockedUntil =
+          new Date(
+            Date.now() + 15 * 60 * 1000
+          );
+
+        await user.save({
+          validateBeforeSave: false
+        });
+
+        await AuditLog.create({
+          event: 'OTP_LOCKED',
+          email: user.email,
+          ip: req.ip,
+          meta: {
+            lockedUntil:
+              user.otpLockedUntil
+          }
+        });
+
+        return res.status(403).json({
+          success: false,
+          message:
+            'Too many incorrect attempts. Account locked for 15 minutes.'
+        });
       }
 
-      await user.save({ validateBeforeSave: false });
-      return res.status(400).json({ success: false, message: `Incorrect code. ${3 - user.otpAttempts} attempts remaining.` });
+      await user.save({
+        validateBeforeSave: false
+      });
+
+      return res.status(400).json({
+        success: false,
+        message:
+          `Incorrect OTP. ${3 - user.otpAttempts} attempts remaining.`
+      });
     }
+
+    // =========================
+    // OTP SUCCESS
+    // =========================
 
     user.otp = undefined;
     user.otpExpiry = undefined;
     user.otpAttempts = 0;
     user.otpLockedUntil = null;
     user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false });
 
-    await AuditLog.create({ event: 'OTP_SUCCESS', email: user.email, ip: req.ip });
+    await user.save({
+      validateBeforeSave: false
+    });
+
+    // =========================
+    // Audit Success
+    // =========================
+
+    await AuditLog.create({
+      event: 'OTP_SUCCESS',
+      email: user.email,
+      ip: req.ip
+    });
+
+    // =========================
+    // Generate JWT
+    // =========================
 
     const token = generateToken(user);
 
-    res.json({
+    // =========================
+    // Final Response
+    // =========================
+
+    return res.json({
       success: true,
+
+      message:
+        'OTP verified successfully',
+
       token,
+
       user: {
         _id: user._id,
         name: user.name,
@@ -227,16 +522,24 @@ const verifyOtp = async (req, res, next) => {
         userType: user.userType,
         designation: user.designation,
         avatar: user.avatar,
-        preferredContact: user.preferredContact,
-        notificationPreferences: user.notificationPreferences,
+        preferredContact:
+          user.preferredContact,
+        notificationPreferences:
+          user.notificationPreferences,
         location: user.location
       }
     });
+
   } catch (err) {
+
+    console.error(
+      'VERIFY OTP ERROR:',
+      err
+    );
+
     next(err);
   }
 };
-
 /**
  * Disabled password login
  * POST /api/auth/login
@@ -377,6 +680,51 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+const UptadeProfile = async(req,res)=>{
+  try{
+    const userId = req.user.id;
+    const { name, department, designation, preferredContact, location } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    user.name = name || user.name;
+    user.department = department || user.department;
+    user.designation = designation || user.designation;
+    user.preferredContact = preferredContact || user.preferredContact;
+    user.location = location || user.location;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        designation: user.designation,
+        preferredContact: user.preferredContact,
+        location: user.location
+      }
+    });
+  }
+  catch(error){
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while updating profile'
+    });
+  }
+};
+
 module.exports = {
   requestVerification,
   verifyEmail,
@@ -386,5 +734,6 @@ module.exports = {
   getMe,
   adminCreateUser,
   adminResetPassword,
-  changePassword
+  changePassword,
+  UptadeProfile
 };

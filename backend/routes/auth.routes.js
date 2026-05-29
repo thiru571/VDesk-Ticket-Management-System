@@ -4,7 +4,8 @@ const {
   requestVerification, verifyEmail,
   sendOtp, verifyOtp, login, getMe,
   adminCreateUser, adminResetPassword,
-  changePassword
+  changePassword,
+  UptadeProfile
 } = require('../controllers/auth.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const rateLimit = require('express-rate-limit');
@@ -28,6 +29,7 @@ router.put(
   protect,
   changePassword
 );// kept for admin password login
+router.put('/profile',protect,UptadeProfile);
 
 // Private
 router.get('/me', protect, getMe);

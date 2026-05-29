@@ -60,7 +60,7 @@ export const userService = {
   getOne: (id) => api.get(`/users/${id}`),
   update: (id, data) => api.put(`/users/${id}`, data),
   getStats: (id) => api.get(`/users/${id}/stats`),
-  updateProfile: (data) => api.put('/auth/profile', data),
+  updateProfile: (data) => api.put('/auth/profile/', data),
   changePassword: (data) => api.put('/auth/change-password', data),
   updateLiveStatus: (data) => api.put('/users/status', data)
 };
