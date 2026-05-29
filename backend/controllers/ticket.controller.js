@@ -22,24 +22,44 @@ const { getSystemStatusAverages } = require('../services/analytics.service');
 const createTicket = async (req, res, next) => {
   try {
     const {
-      title, description, category, impactScope, urgencyLevel,
-      preferredContact, context, relatedTickets, manualPriority,
-      issueStarted, tags, location, shift, ticketType, source, mobileNumber, assetId, subCategory
+      title,
+      description,
+      category,
+      impactScope,
+      urgencyLevel,
+      preferredContact,
+      context,
+      relatedTickets,
+      manualPriority,
+      issueStarted,
+      tags,
+      location,
+      shift,
+      ticketType,
+      source,
+      mobileNumber,
+      assetId,
+      subCategory
     } = req.body;
 
     // Feature 19: Asset ID mandatory for specific categories
     const itCategories = ['Hardware Issue', 'IT Request', 'Replacement'];
+
     if (itCategories.includes(category) && !assetId) {
-      return res.status(400).json({ success: false, message: 'Asset ID is required for this category.' });
+      return res.status(400).json({
+        success: false,
+        message: 'Asset ID is required for this category.'
+      });
     }
 
     // Office to VP Mapping
     const vpMapping = {
-      'GICC': 'VP-GICC',
-      'Bangalore': 'VP-Bangalore',
-      'Remote': null,
-      'Other': null
+      GICC: 'VP-GICC',
+      Bangalore: 'VP-Bangalore',
+      Remote: null,
+      Other: null
     };
+
     const vpAssigned = vpMapping[location] || null;
 
     // Duplicate detection
@@ -49,8 +69,8 @@ const createTicket = async (req, res, next) => {
       $text: { $search: title }
     }).select('ticketId title status');
 
-    // Build attachments from uploaded files
-    const attachments = (req.files || []).map(f => ({
+    // Attachments
+    const attachments = (req.files || []).map((f) => ({
       filename: f.filename,
       originalName: f.originalname,
       mimetype: f.mimetype,
@@ -59,7 +79,7 @@ const createTicket = async (req, res, next) => {
       uploadedBy: req.user._id
     }));
 
-    // Calculate priority score
+    // Calculate priority
     const scoring = calculatePriorityScore({
       impactScope: impactScope || 'just_me',
       urgencyLevel: urgencyLevel || 'flexible',
@@ -69,27 +89,37 @@ const createTicket = async (req, res, next) => {
       createdAt: new Date()
     });
 
-    // If manual priority specified by agent/admin, respect it but log audit
-    const finalPriority = (manualPriority && ['admin', 'support_agent'].includes(req.user.role))
-      ? manualPriority
-      : scoring.priority;
+    const finalPriority =
+      manualPriority &&
+      ['admin', 'support_agent'].includes(req.user.role)
+        ? manualPriority
+        : scoring.priority;
 
-    const prioritySource = manualPriority && ['admin', 'support_agent'].includes(req.user.role)
-      ? 'manual' : 'auto';
+    const prioritySource =
+      manualPriority &&
+      ['admin', 'support_agent'].includes(req.user.role)
+        ? 'manual'
+        : 'auto';
 
     const slaDeadline = await calculateSLADeadline(finalPriority);
-    const responseDeadline = await calculateResponseDeadline(finalPriority);
 
+    const responseDeadline =
+      await calculateResponseDeadline(finalPriority);
+
+    // Create Ticket
     const ticket = await Ticket.create({
       title: title.trim(),
       description: description.trim(),
       category,
       ticketType,
-      source: source || 'Portal', // This is the old source field, ticketSource is new
+      source: source || 'Portal',
       officeLocation: location || undefined,
       shift: shift || 'Morning',
       assetId,
-      ticketSource: source === 'Help Desk' ? 'Help Desk' : 'Digital',
+      ticketSource:
+        source === 'Help Desk'
+          ? 'Help Desk'
+          : 'Digital',
       vpAssigned,
       mobileNumber,
       priority: finalPriority,
@@ -99,16 +129,26 @@ const createTicket = async (req, res, next) => {
       impactScope: impactScope || 'just_me',
       urgencyLevel: urgencyLevel || 'flexible',
       createdBy: req.user._id,
-      preferredContact: preferredContact || req.user.preferredContact,
-      context: { ...context, issueStarted },
+      preferredContact:
+        preferredContact || req.user.preferredContact,
+      context: {
+        ...context,
+        issueStarted
+      },
       relatedTickets: relatedTickets || [],
       attachments,
       tags: tags || [],
-      sla: { deadline: slaDeadline, responseDeadline },
-      subCategory: subCategory || undefined
+      sla: {
+        deadline: slaDeadline,
+        responseDeadline
+      },
+      subCategory: subCategory || undefined,
+
+      // Default Status
+      status: 'open'
     });
 
-    // Feature 9 & 17: Department Routing
+    // Department Routing
     let assignedDepartment = null;
     let departmentAdminId = null;
 
@@ -117,72 +157,134 @@ const createTicket = async (req, res, next) => {
       'Software Issue': 'IT Department',
       'Hardware Issue': 'IT Department',
       'IT Request': 'IT Department',
-      'Replacement': 'IT Department',
+      Replacement: 'IT Department',
       'Email Login Issue': 'IT Department',
-      'Other': 'IT Department'
+      Other: 'IT Department'
     };
 
-    let targetDeptName = routingMap[category] || 'IT Department';
+    let targetDeptName =
+      routingMap[category] || 'IT Department';
 
     if (category === 'HR Needs') {
-      const hrDept = await Department.findOne({ name: 'HR Department' });
+      const hrDept = await Department.findOne({
+        name: 'HR Department'
+      });
+
       if (hrDept && hrDept.isActive) {
         targetDeptName = 'HR Department';
       } else {
-        targetDeptName = 'IT Department'; // Fallback if HR is inactive
+        targetDeptName = 'IT Department';
       }
     }
 
-    const dept = await Department.findOne({ name: targetDeptName }).lean();
+    const dept = await Department.findOne({
+      name: targetDeptName
+    }).lean();
+
     if (dept) {
       assignedDepartment = dept._id;
       departmentAdminId = dept.adminId;
+
       ticket.assignedDepartment = assignedDepartment;
     }
 
-    // NEW: Use robust auto-assign service
+    // Auto Assign Ticket
     const agent = await autoAssignTicket(ticket);
+
     if (agent) {
       ticket.assignedTo = agent._id;
       ticket.assignedAt = new Date();
       ticket.assignedBy = null; // system
       ticket.autoAssigned = true;
-      ticket.status = 'assigned';
-      ticket.statusHistory.push({ from: 'open', to: 'assigned', reason: 'Auto-assigned by system' });
+
+      // Employee sees Pending
+      ticket.status = 'pending';
+
+      ticket.statusHistory.push({
+        from: 'open',
+        to: 'pending',
+        reason:
+          'Ticket assigned and waiting for agent action'
+      });
+
       await ticket.save();
 
+      // Increase workload
       await incrementWorkload(agent._id);
-      await notifyTicketAssigned(ticket, agent, req.user);
+
+      // Notify assigned agent
+      await notifyTicketAssigned(
+        ticket,
+        agent,
+        req.user
+      );
+
     } else if (departmentAdminId) {
-      // Fallback to Dept Admin
+
+      // Fallback to department admin
       ticket.assignedTo = departmentAdminId;
+
       await ticket.save();
     }
 
     // Update user stats
-    await User.findByIdAndUpdate(req.user._id, { $inc: { 'stats.totalRaised': 1 } });
+    await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $inc: {
+          'stats.totalRaised': 1
+        }
+      }
+    );
 
     // Send confirmation email
-    sendTicketConfirmation({ to: req.user.email, name: req.user.name, ticket }).catch(() => { });
+    sendTicketConfirmation({
+      to: req.user.email,
+      name: req.user.name,
+      ticket
+    }).catch(() => {});
 
-    await ticket.populate('createdBy assignedTo', 'name email department avatar');
+    // Populate user + assigned agent
+    await ticket.populate(
+      'createdBy assignedTo',
+      'name email department avatar'
+    );
 
-    // Real-time: notify admins/agents with the FULL ticket object
+    // Socket realtime notification
     const socketPayload = {
       ticketId: ticket._id,
-      ticket: ticket,
+      ticket,
       title: ticket.title,
       priority: ticket.priority
     };
-    emitToRole('admin', 'ticket_created', socketPayload);
-    emitToRole('support_agent', 'ticket_created', socketPayload);
 
+    emitToRole(
+      'admin',
+      'ticket_created',
+      socketPayload
+    );
+
+    emitToRole(
+      'support_agent',
+      'ticket_created',
+      socketPayload
+    );
+
+    // Response
     res.status(201).json({
       success: true,
       message: 'Ticket created successfully',
       ticket,
-      duplicate: duplicateCheck ? { found: true, ticket: duplicateCheck } : { found: false }
+      duplicate: duplicateCheck
+        ? {
+            found: true,
+            ticket: duplicateCheck
+          }
+        : {
+            found: false
+          }
     });
+
   } catch (err) {
     next(err);
   }
