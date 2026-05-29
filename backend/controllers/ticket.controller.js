@@ -41,6 +41,7 @@ const createTicket = async (req, res, next) => {
       assetId,
       subCategory
     } = req.body;
+    console.log('Creating ticket with data:', req.body);
 
     // Feature 19: Asset ID mandatory for specific categories
     const itCategories = ['Hardware Issue', 'IT Request', 'Replacement'];
