@@ -1,0 +1,460 @@
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Ticket, 
+  BookOpen, 
+  User, 
+  Users, 
+  Bell, 
+  Search, 
+  Plus, 
+  LogOut, 
+  Menu, 
+  BarChart2,
+  PieChart,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  Zap,
+  Ticket as TicketIcon
+} from 'lucide-react';
+import Logo from '../../assets/logo.svg';
+import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
+import { useToast } from '../../context/ToastContext';
+import { notificationService, userService } from '../../services/ticketService';
+import { getInitials, getAvatarColor } from '../../utils/helpers';
+import { motion, AnimatePresence } from 'framer-motion';
+import '../../styles/dashboard-premium.css';
+
+const NAV_ITEMS = {
+  all: [
+    { path: '/tickets',   label: 'Tickets',    icon: TicketIcon },
+    { path: '/knowledge', label: 'Knowledge Base', icon: BookOpen },
+  ],
+  employee: [
+    { path: '/tickets/new', label: 'New Ticket', icon: Plus },
+    { path: '/profile',   label: 'Profile',    icon: User },
+  ],
+  support_agent: [
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/tickets?myTickets=true&status=open,assigned,in_progress,reopened', label: 'My Queue', icon: TrendingUp },
+    { path: '/profile',   label: 'Profile',    icon: User },
+  ],
+  admin: [
+    { path: '/dashboard',  label: 'Dashboard', icon: LayoutDashboard, fa: 'fa-gauge' },
+    { path: '/admin/users', label: 'Users',     icon: Users,           fa: 'fa-users' },
+    { path: '/reports',    label: 'Reports',   icon: BarChart2,       fa: 'fa-chart-bar' },
+    { path: '/analytics',  label: 'Analytics', icon: PieChart,        fa: 'fa-chart-line' },
+    { path: '/admin/performance', label: 'Efficiency', icon: Zap,      fa: 'fa-bolt' },
+    { path: '/settings',   label: 'Settings',  icon: Settings,        fa: 'fa-gear' },
+    { path: '/profile',    label: 'Profile',   icon: User,            fa: 'fa-user' },
+  ]
+};
+
+export default function AppLayout() {
+  const { user, logout, updateUser } = useAuth();
+  const { on } = useSocket();
+  const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const notifRef = useRef(null);
+
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+  useEffect(() => {
+    notificationService.getAll({ limit: 8 })
+      .then(res => {
+        setNotifications(res.data.notifications || []);
+        setUnreadCount(res.data.unreadCount || 0);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!on) return;
+    const off = on('notification', (notif) => {
+      setNotifications(prev => [notif, ...prev.slice(0, 9)]);
+      setUnreadCount(prev => prev + 1);
+      toast.info(notif.message);
+    });
+    return off;
+  }, [on]);
+
+  let navItems = [];
+  if (user?.role === 'employee') {
+    navItems = [
+      NAV_ITEMS.employee[0], // New Ticket
+      ...NAV_ITEMS.all,
+      NAV_ITEMS.employee[1]  // Profile
+    ];
+  } else if (user?.role === 'support_agent') {
+    navItems = [
+      NAV_ITEMS.support_agent[0], // Dashboard
+      ...NAV_ITEMS.all,
+      NAV_ITEMS.support_agent[1], // My Queue
+      NAV_ITEMS.support_agent[2]  // Profile
+    ];
+  } else if (user?.role === 'admin') {
+    navItems = [
+      NAV_ITEMS.admin[0], // Dashboard
+      ...NAV_ITEMS.all,
+      ...NAV_ITEMS.admin.slice(1) // Users, Reports, Analytics, etc.
+    ];
+  } else {
+    navItems = [...NAV_ITEMS.all];
+  }
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      const q = encodeURIComponent(searchQuery.trim());
+      if (location.pathname.startsWith('/knowledge')) {
+        navigate(`/knowledge?search=${q}`);
+      } else {
+        navigate(`/tickets?search=${q}`);
+      }
+      setSearchQuery('');
+    }
+  };
+
+  const markAllRead = () => {
+    setUnreadCount(0);
+    setNotifOpen(false);
+  };
+
+  return (
+    <div className="premium-layout">
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="overlay" 
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }}
+            onClick={() => setMobileOpen(false)} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* PREMIUM SIDEBAR */}
+      <aside className={`premium-sidebar hide-mobile ${collapsed ? 'collapsed' : ''}`} style={mobileOpen ? { display: 'flex', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 50 } : {}}>
+        <div 
+          className="premium-sidebar-brand"
+          onClick={() => {
+            if (user?.role === 'admin' || user?.role === 'support_agent') {
+              navigate('/dashboard');
+            } else {
+              navigate('/tickets');
+            }
+          }}
+          style={{ cursor: 'pointer', padding: '32px 24px' }}
+        >
+          <div className="premium-brand-icon" style={{ boxShadow: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
+            <img src={Logo} alt="VDesk Logo" style={{ width: '100%', height: 'auto' }} />
+          </div>
+          <span style={{ fontWeight: 900, letterSpacing: '-0.5px' }}>VDesk</span>
+        </div>
+
+        <nav className="premium-nav">
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', paddingLeft: '16px',   }}>
+            Main Menu
+          </div>
+          {navItems.map((item) => {
+            const checkActive = (isActive) => {
+              const currentSearch = location.search;
+              const isMyTicketsInUrl = currentSearch.includes('myTickets=true');
+              
+              if (item.path === '/tickets') {
+                if (location.pathname === '/tickets/new') return false;
+                return isActive && !isMyTicketsInUrl;
+              }
+              
+              if (item.path.includes('myTickets=true')) {
+                return isMyTicketsInUrl;
+              }
+              
+              return isActive;
+            };
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) => `premium-nav-item ${checkActive(isActive) ? 'active' : ''}`}
+                style={({ isActive }) => checkActive(isActive) ? { background: '#1F4E79', color: 'white', borderRadius: '8px' } : {}}
+              >
+                {item.fa
+                  ? <i className={`fa-solid ${item.fa}`} style={{ fontSize: '1rem', width: '20px', textAlign: 'center' }} />
+                  : <item.icon size={20} />}
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+           <button
+            onClick={() => navigate('/notifications')}
+            className="premium-nav-item"
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              textAlign: 'left',
+              position: 'relative'
+            }}
+          >
+            <Bell size={20} />
+
+            <span>Notifications</span>
+
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  marginLeft: 'auto',
+                  minWidth: '18px',
+                  height: '18px',
+                  background: '#EF4444',
+                  color: '#fff',
+                  borderRadius: '999px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 6px'
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          
+        </nav>
+        <>
+         <div 
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid var(--border)', cursor: 'pointer' }}
+                onClick={() => navigate('/profile')}
+              >
+                <div className="hide-mobile" onClick={() => navigate('/profile')}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{user?.name || 'User'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ') || 'Role'}</div>
+                </div>
+
+
+                
+                {/*  
+                <button 
+                  onClick={(e) => { e.stopPropagation(); logout(); }}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', alignItems: 'center', padding: '8px', marginLeft: '12px' }}
+                  title="Logout"
+                >
+                  <LogOut size={20} />
+                </button>
+                */}
+              </div>
+
+              
+        </>
+          
+        <div style={{ marginTop: 'auto', padding: '32px 24px', borderTop: '1px solid var(--border-light)' }}>
+              
+
+          <button
+            className="premium-nav-item"
+            onClick={() => { setLoggingOut(true); setTimeout(logout, 800); }}
+            disabled={loggingOut}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', opacity: loggingOut ? 0.7 : 1, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px', padding: '0' }}
+          >
+            {loggingOut
+              ? <><div className="spinner" style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#EF4444' }} /><span>Logging out...</span></>
+              : <><i className="fa-solid fa-right-from-bracket" style={{ fontSize: '1.2rem' }} /><span>Logout</span></>}
+          </button>
+         
+        </div>
+        
+      </aside>
+
+      {/* PREMIUM MAIN WRAPPER */}
+      <div className="premium-main">
+        {/* TOP NAVBAR */}
+        <header className="premium-header">
+          <div style={{ display: 'flex', width: '100%', maxWidth: '1600px', margin: '0 auto', alignItems: 'center', justifyContent: 'space-between', padding: '0 48px' }} className="premium-header-inner">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <button className="hide-desktop" onClick={() => setMobileOpen(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}>
+                <Menu size={24} />
+              </button>
+              <div className="premium-search hide-mobile">
+                <Search size={18} />
+                <input
+                  placeholder="Search anything..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearch}
+                />
+              </div>
+            </div>
+
+            <div className="premium-header-actions">
+              {user?.role === 'employee' && location.pathname !== '/tickets/new' && (
+                <button className="premium-btn" onClick={() => navigate('/tickets/new')}>
+                  <Plus size={18} />
+                  <span className="hide-mobile">Create Ticket</span>
+                </button>
+              )}
+
+              <div 
+                style={{ position: 'relative', paddingBottom: '0' }} 
+                ref={notifRef}
+                onMouseEnter={() => setNotifOpen(true)}
+                onMouseLeave={() => setNotifOpen(false)}
+              >
+
+
+              {/* thiss notification area  */}
+
+
+                <button 
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)', position: 'relative', padding: '8px' }}
+                >
+                  <Bell size={22} />
+                  {unreadCount > 0 && <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--card)' }} />}
+                </button>
+                
+                <AnimatePresence>
+                  {notifOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      style={{ position: 'absolute', right: 0, top: '48px', width: '320px', zIndex: 100, background: 'var(--card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)' }}
+                    >
+                      <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Notifications</span>
+                        <button onClick={markAllRead} style={{ fontSize: '0.8rem', color: 'var(--primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Mark all read</button>
+                      </div>
+                      <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+                        {notifications.length === 0 ? (
+                          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)', fontSize: '0.9rem' }}>No notifications</div>
+                        ) : notifications.map(n => (
+                          <div 
+                            key={n._id} 
+                            style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: '12px', cursor: 'pointer' }} 
+                            className="premium-nav-item"
+                            onClick={() => {
+                              setNotifOpen(false);
+                              if (n.link || n.ticket) {
+                                navigate(n.link || `/tickets/${n.ticket}`);
+                              }
+                            }}
+                          >
+                            <div style={{ fontSize: '1.2rem' }}>🔔</div>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '0.85rem' }}>{n.title}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>{n.message}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+             
+              {/* <div 
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid var(--border)', cursor: 'pointer' }}
+                onClick={() => navigate('/profile')}
+              >
+                <div className="hide-mobile" onClick={() => navigate('/profile')}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{user?.name || 'User'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ') || 'Role'}</div>
+                </div>
+                {/*  
+                <button 
+                  onClick={(e) => { e.stopPropagation(); logout(); }}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', alignItems: 'center', padding: '8px', marginLeft: '12px' }}
+                  title="Logout"
+                >
+                  <LogOut size={20} />
+                </button>
+                
+              </div> */}
+
+               
+             
+
+               {/* Status Toggle for Agents/Admins */}
+               {(user?.role === 'support_agent' || user?.role === 'admin') && (
+                 <div style={{ position: 'relative', marginLeft: '8px' }}>
+                    <div 
+                      className={user?.role === 'admin' ? 'status-toggle-active' : ''}
+                      style={{ 
+                        padding: '4px 12px', borderRadius: '20px', 
+                        background: 'var(--bg)', border: '1px solid var(--border)',
+                        display: 'flex', alignItems: 'center', gap: '8px', 
+                        cursor: user?.role === 'admin' ? 'pointer' : 'default',
+                        transition: 'all 0.2s ease',
+                        opacity: user?.role === 'admin' ? 1 : 0.9
+                      }}
+                      onClick={(e) => {
+                        if (user?.role !== 'admin') return;
+                       const rect = e.currentTarget.getBoundingClientRect();
+                       const statusMap = {
+                         available: { label: 'Available', color: '#10B981' },
+                         on_site: { label: 'On-Site', color: '#3B82F6' },
+                         remote: { label: 'Remote', color: '#F59E0B' },
+                         unavailable: { label: 'Away', color: '#EF4444' }
+                       };
+                       const statuses = ['available', 'on_site', 'remote', 'unavailable'];
+                       const currentIdx = statuses.indexOf(user?.liveStatus || 'available');
+                       const nextStatus = statuses[(currentIdx + 1) % statuses.length];
+                       
+                       userService.updateLiveStatus({ status: nextStatus })
+                         .then(res => {
+                           updateUser({ liveStatus: res.data.status });
+                           toast.success(`Status updated to ${nextStatus.replace('_', ' ')}`);
+                         })
+                         .catch(err => toast.error(err.response?.data?.message || 'Failed to update status'));
+                     }}
+                   >
+                     <div style={{ 
+                       width: '8px', height: '8px', borderRadius: '50%', 
+                       background: ({ available: '#10B981', on_site: '#3B82F6', remote: '#F59E0B', unavailable: '#EF4444' })[user?.liveStatus || 'available'],
+                       boxShadow: `0 0 8px ${({ available: '#10B981', on_site: '#3B82F6', remote: '#F59E0B', unavailable: '#EF4444' })[user?.liveStatus || 'available']}88`
+                     }} />
+                     <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                        {({ available: 'Available', on_site: 'On-Site', remote: 'Remote', unavailable: 'Away' })[user?.liveStatus || 'available']}
+                     </span>
+                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <main style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--bg)' }}>
+          <Outlet />
+        </main>
+      </div>
+
+      <style>{`
+        .hide-desktop { display: none; }
+        @media (max-width: 1024px) {
+          .hide-desktop { display: block; }
+          .hide-mobile { display: none; }
+          .premium-sidebar.hide-mobile { display: none; }
+        }
+      `}</style>
+    </div>
+  );
+}
