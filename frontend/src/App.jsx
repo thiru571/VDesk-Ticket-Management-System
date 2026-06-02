@@ -4,6 +4,8 @@ import { SocketProvider } from './context/SocketContext';
 import { ToastProvider } from './context/ToastContext';
 
 import AppLayout from './components/common/AppLayout';
+import NotificationPage from './pages/NotificationPage';
+
 import LoginPage from './pages/LoginPage';
 import MobileLoginPage from './pages/MobileLoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -63,6 +65,7 @@ const AppRoutes = () => (
       <Route path="knowledge/new"      element={<ProtectedRoute roles={['admin', 'support_agent']}><CreateKnowledgePage /></ProtectedRoute>} />
       <Route path="knowledge/:id"      element={<KnowledgeArticlePage />} />
       <Route path="profile"            element={<ProfilePage />} />
+      <Route path="/notifications" element={<NotificationPage />} />
       
       {/* Admin Specific */}
       <Route path="admin/users"        element={<ProtectedRoute roles={['admin']}><AdminUsersPage /></ProtectedRoute>} />

@@ -202,6 +202,42 @@ export default function AppLayout() {
               </NavLink>
             );
           })}
+           <button
+            onClick={() => navigate('/notifications')}
+            className="premium-nav-item"
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              textAlign: 'left',
+              position: 'relative'
+            }}
+          >
+            <Bell size={20} />
+
+            <span>Notifications</span>
+
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  marginLeft: 'auto',
+                  minWidth: '18px',
+                  height: '18px',
+                  background: '#EF4444',
+                  color: '#fff',
+                  borderRadius: '999px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 6px'
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </button>
           
         </nav>
         <>
@@ -213,6 +249,9 @@ export default function AppLayout() {
                   <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{user?.name || 'User'}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ') || 'Role'}</div>
                 </div>
+
+
+                
                 {/*  
                 <button 
                   onClick={(e) => { e.stopPropagation(); logout(); }}
@@ -223,6 +262,8 @@ export default function AppLayout() {
                 </button>
                 */}
               </div>
+
+              
         </>
           
         <div style={{ marginTop: 'auto', padding: '32px 24px', borderTop: '1px solid var(--border-light)' }}>
@@ -277,6 +318,11 @@ export default function AppLayout() {
                 onMouseEnter={() => setNotifOpen(true)}
                 onMouseLeave={() => setNotifOpen(false)}
               >
+
+
+              {/* thiss notification area  */}
+
+
                 <button 
                   onClick={() => setNotifOpen(!notifOpen)}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)', position: 'relative', padding: '8px' }}
