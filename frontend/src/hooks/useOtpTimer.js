@@ -9,18 +9,18 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 export function useOtpTimer({
   expirySeconds = 300,
   resendCooldown = 30,
-  maxResends = 3
+  maxResends = 3,
 } = {}) {
-  const [timeLeft, setTimeLeft]         = useState(expirySeconds);
-  const [cooldown, setCooldown]         = useState(0);      // resend button cooldown
-  const [resendCount, setResendCount]   = useState(0);
-  const [isExpired, setIsExpired]       = useState(false);
-  const [isLocked, setIsLocked]         = useState(false);  // resend locked after maxResends
+  const [timeLeft, setTimeLeft]       = useState(expirySeconds);
+  const [cooldown, setCooldown]       = useState(0);   // ✅ 0 on mount — no initial cooldown
+  const [resendCount, setResendCount] = useState(0);
+  const [isExpired, setIsExpired]     = useState(false);
+  const [isLocked, setIsLocked]       = useState(false);
 
-  const expiryTimer  = useRef(null);
+  const expiryTimer   = useRef(null);
   const cooldownTimer = useRef(null);
 
-  // ── Countdown (OTP expiry) ───────────────────────────────────────────────
+  // ── OTP expiry countdown ─────────────────────────────────────────────────
   const startExpiry = useCallback(() => {
     clearInterval(expiryTimer.current);
     setTimeLeft(expirySeconds);
@@ -38,7 +38,7 @@ export function useOtpTimer({
     }, 1000);
   }, [expirySeconds]);
 
-  // ── Resend cooldown ──────────────────────────────────────────────────────
+  // ── Resend button cooldown ───────────────────────────────────────────────
   const startCooldown = useCallback(() => {
     clearInterval(cooldownTimer.current);
     setCooldown(resendCooldown);
@@ -54,7 +54,9 @@ export function useOtpTimer({
     }, 1000);
   }, [resendCooldown]);
 
-  // Called when user clicks Resend
+  // ── Called when user clicks Resend ───────────────────────────────────────
+  // Returns true if resend is allowed (caller makes the API call),
+  // false if blocked by cooldown or lock.
   const onResend = useCallback(() => {
     if (cooldown > 0 || isLocked) return false;
 
@@ -64,30 +66,34 @@ export function useOtpTimer({
 
     startExpiry();
     startCooldown();
-    return true; // caller should make the API call
+    return true;
   }, [cooldown, isLocked, resendCount, maxResends, startExpiry, startCooldown]);
 
-  // Start timers on mount
+  // ── Start only the expiry timer on mount (no initial resend cooldown) ────
   useEffect(() => {
     startExpiry();
-    startCooldown();
     return () => {
       clearInterval(expiryTimer.current);
       clearInterval(cooldownTimer.current);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Formatted MM:SS string
-  const formatted = `${String(Math.floor(timeLeft / 60)).padStart(2, '0')}:${String(timeLeft % 60).padStart(2, '0')}`;
+  // MM:SS display string
+  const formatted = [
+    String(Math.floor(timeLeft / 60)).padStart(2, '0'),
+    String(timeLeft % 60).padStart(2, '0'),
+  ].join(':');
 
   return {
     timeLeft,
-    formatted,      // e.g. "04:59"
+    formatted,    // e.g. "04:59"
     isExpired,
-    cooldown,       // seconds remaining on resend cooldown
+    cooldown,     // seconds left on resend cooldown (0 = ready)
     resendCount,
-    isLocked,       // true when resend attempts exhausted
-    onResend,       // call this; returns true if resend allowed
-    canResend: cooldown === 0 && !isLocked && !isExpired === false, // convenience
+    isLocked,     // true when all resend attempts exhausted
+    onResend,     // call this on resend click; returns true if allowed
+    // ✅ Fixed: resend is allowed when no cooldown, not locked
+    // (expired OTP is intentionally resendable — that's the recovery path)
+    canResend: cooldown === 0 && !isLocked,
   };
 }

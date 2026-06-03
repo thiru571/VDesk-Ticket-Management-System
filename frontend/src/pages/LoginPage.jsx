@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, ArrowRight, ShieldCheck, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -6,10 +6,137 @@ import { useToast } from '../context/ToastContext';
 import { Button, Input } from '../ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
-import OtpInput from '../components/OtpInput';
 import { useOtpTimer } from '../hooks/useOtpTimer';
 import Logo from '../assets/logo.svg';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Inline OtpInput — self-contained, no prop-threading issues
+// Supports: keyboard nav, paste-anywhere, mobile SMS autocomplete
+// Does NOT auto-submit on complete — parent drives submission via button
+// ─────────────────────────────────────────────────────────────────────────────
+function OtpInput({ value, onChange, disabled }) {
+  const inputRefs = useRef([]);
+
+  // Focus helper
+  const focusCell = (index) => {
+    const el = inputRefs.current[index];
+    if (el) {
+      el.focus();
+      // Move caret to end so typing replaces rather than inserts
+      requestAnimationFrame(() => el.setSelectionRange(1, 1));
+    }
+  };
+
+  // Single-cell change
+  const handleChange = (index, e) => {
+    const raw = e.target.value;
+    // Accept only digits; strip everything else
+    const digit = raw.replace(/\D/g, '').slice(-1);
+
+    const next = [...value];
+    next[index] = digit;
+    onChange(next);
+
+    if (digit && index < 5) focusCell(index + 1);
+  };
+
+  // Backspace navigation
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      if (value[index]) {
+        // Clear current cell
+        const next = [...value];
+        next[index] = '';
+        onChange(next);
+      } else if (index > 0) {
+        // Move back and clear
+        const next = [...value];
+        next[index - 1] = '';
+        onChange(next);
+        focusCell(index - 1);
+      }
+      e.preventDefault();
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      focusCell(index - 1);
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      focusCell(index + 1);
+    }
+  };
+
+  // Paste on any cell — fills all 6
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+
+    const next = ['', '', '', '', '', ''];
+    pasted.split('').forEach((ch, i) => { next[i] = ch; });
+    onChange(next);
+
+    // Focus last filled cell (or last cell if full)
+    const lastFilled = Math.min(pasted.length, 5);
+    focusCell(lastFilled);
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: '10px',
+        justifyContent: 'center',
+        // Paste anywhere in the container works because it bubbles
+      }}
+      onPaste={handlePaste}
+    >
+      {value.map((digit, i) => (
+        <input
+          key={i}
+          ref={(el) => (inputRefs.current[i] = el)}
+          type="text"
+          inputMode="numeric"
+          // ✅ Critical for mobile SMS autofill — browser reads this attribute
+          autoComplete={i === 0 ? 'one-time-code' : 'off'}
+          maxLength={1}
+          value={digit}
+          disabled={disabled}
+          onChange={(e) => handleChange(i, e)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onFocus={(e) => e.target.select()}
+          style={{
+            width: '48px',
+            height: '56px',
+            textAlign: 'center',
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            border: digit
+              ? '2px solid #1F4E79'
+              : '2px solid #E5E7EB',
+            borderRadius: '12px',
+            outline: 'none',
+            background: disabled ? '#F9FAFB' : '#fff',
+            color: '#1a1a1a',
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+            boxShadow: digit ? '0 0 0 3px rgba(31,78,121,0.08)' : 'none',
+            cursor: disabled ? 'not-allowed' : 'text',
+          }}
+          onFocusCapture={(e) => {
+            // Highlight ring on focus
+            e.target.style.borderColor = '#1F4E79';
+            e.target.style.boxShadow = '0 0 0 3px rgba(31,78,121,0.15)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = digit ? '#1F4E79' : '#E5E7EB';
+            e.target.style.boxShadow = digit ? '0 0 0 3px rgba(31,78,121,0.08)' : 'none';
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LoginPage
+// ─────────────────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const { loginWithToken } = useAuth();
   const toast = useToast();
@@ -22,6 +149,7 @@ export default function LoginPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [devOtp, setDevOtp] = useState(null); // only populated in development
 
   // ── OTP timer hook ──────────────────────────────────────────────────────────
   const { formatted, isExpired, cooldown, onResend, isLocked } = useOtpTimer({
@@ -33,20 +161,32 @@ export default function LoginPage() {
   // ── Step 1 — Send OTP ───────────────────────────────────────────────────────
   const handleSendOtp = async (e) => {
     e?.preventDefault();
-    if (!email.trim()) return toast.error('Please enter your work email');
+    const target = useMobile ? mobile.trim() : email.trim();
+    if (!target) return toast.error(useMobile ? 'Please enter your phone number' : 'Please enter your work email');
 
-    const allowedDomains = ['@vdartinc.com', '@ndartinc.com'];
-    const isValid = allowedDomains.some((d) => email.toLowerCase().endsWith(d));
-    if (!isValid) {
-      return toast.error('Please use a valid company email (@vdartinc.com or @ndartinc.com).');
+    if (!useMobile) {
+      const allowedDomains = ['@vdartinc.com', '@ndartinc.com'];
+      const isValid = allowedDomains.some((d) => email.toLowerCase().endsWith(d));
+      if (!isValid) {
+        return toast.error('Please use a valid company email (@vdartinc.com or @ndartinc.com).');
+      }
     }
 
     setLoading(true);
     try {
-      const res = await api.post('/auth/send-otp', { email });
-      toast.success(res.data.message || 'Code sent! Check your email inbox.');
+      const payload = useMobile ? { mobile } : { email };
+      const res = await api.post('/auth/send-otp', payload);
+      toast.success(res.data.message || 'Code sent!');
       setStep('otp');
-      setOtp(['', '', '', '', '', '']);
+      // Dev autofill — server returns devOtp only when NODE_ENV=development
+      if (res.data.devOtp) {
+        // Pad to 6 digits — leading zeros are lost if server sends a number
+        const padded = String(res.data.devOtp).padStart(6, '0').slice(0, 6);
+        setOtp(padded.split(''));
+        setDevOtp(padded);
+      } else {
+        setOtp(['', '', '', '', '', '']);
+      }
     } catch (err) {
       if (!err.response) {
         toast.error('Network Error: Cannot connect to the server.');
@@ -63,9 +203,16 @@ export default function LoginPage() {
     if (!onResend()) return;
     setResending(true);
     setOtp(['', '', '', '', '', '']);
+    setDevOtp(null);
     try {
-      const res = await api.post('/auth/send-otp', { email });
+      const payload = useMobile ? { mobile } : { email };
+      const res = await api.post('/auth/send-otp', payload);
       toast.success(res.data.message || 'New code sent!');
+      if (res.data.devOtp) {
+        const padded = String(res.data.devOtp).padStart(6, '0').slice(0, 6);
+        setOtp(padded.split(''));
+        setDevOtp(padded);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to resend');
     } finally {
@@ -73,43 +220,16 @@ export default function LoginPage() {
     }
   };
 
-  // ── OTP input handlers (NO auto-verify — button only) ───────────────────────
-  const inputRefs = useRef([]);
-
-  const handleOtpChange = (index, value) => {
-    if (value && !/^\d$/.test(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    // Move focus forward — do NOT auto-submit
-    if (value && index < 5) inputRefs.current[index + 1]?.focus();
-  };
-
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (pasted.length === 6) {
-      setOtp(pasted.split(''));
-      // Focus last box so user sees it filled — do NOT auto-submit
-      inputRefs.current[5]?.focus();
-    }
-  };
-
   // ── Step 2 — Verify OTP (button-click only) ─────────────────────────────────
   const handleVerifyOtp = async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) return toast.error('Please enter the full 6-digit code');
-    if (loading) return; // prevent duplicate calls
+    if (loading) return;
 
     setLoading(true);
     try {
-      const res = await api.post('/auth/verify-otp', { email, otp: otpCode });
+      const payload = useMobile ? { mobile, otp: otpCode } : { email, otp: otpCode };
+      const res = await api.post('/auth/verify-otp', payload);
       loginWithToken(res.data.token, res.data.user);
       toast.success(`Welcome back, ${res.data.user.name || 'there'}!`);
       const role = res.data.user.role;
@@ -117,7 +237,6 @@ export default function LoginPage() {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Incorrect code. Please try again.');
       setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
     }
@@ -168,14 +287,14 @@ export default function LoginPage() {
           }}>
             {[
               { label: 'Employee', mobile: false, disabled: false },
-              { label: 'Staff', mobile: false, disabled: true },
+              { label: 'Staff',    mobile: false, disabled: true  },
               { label: 'Mobile Access', mobile: true, disabled: false },
             ].map(({ label, mobile, disabled }) => {
-              const active = !disabled && (mobile ? useMobile : (!useMobile && step === 'email' && label === 'Employee'));
+              const active = !disabled && (mobile ? useMobile : !useMobile);
               return (
                 <button
                   key={label}
-                  onClick={disabled ? undefined : () => { setUseMobile(mobile); setStep('email'); }}
+                  onClick={disabled ? undefined : () => { setUseMobile(mobile); setStep('email'); setOtp(['','','','','','']); }}
                   disabled={disabled}
                   style={{
                     paddingBottom: '12px',
@@ -224,6 +343,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   leftIcon={<Mail size={18} />}
                   type="email"
+                  autoComplete="email"
                   required
                 />
                 <Button
@@ -246,16 +366,22 @@ export default function LoginPage() {
               animate={{ opacity: 1 }}
               style={{ width: '100%', maxWidth: '420px' }}
             >
-              <h2 style={{ fontSize: '1.875rem', fontWeight: 800, marginBottom: '20px' }}>
-                Mobile Sign-in
-              </h2>
+              <div style={{ marginBottom: 'var(--s-8)', textAlign: 'center' }}>
+                <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: '#1a1a1a', letterSpacing: '-0.04em', marginBottom: '12px' }}>
+                  Mobile Sign-in
+                </h2>
+                <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem', lineHeight: 1.5 }}>
+                  Enter your phone number to receive a sign-in code via SMS.
+                </p>
+              </div>
               <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <Input
                   label="Phone Number"
                   placeholder="+1 (555) 000-0000"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
-                  style={{ height: '52px', fontSize: '16px' }}
+                  type="tel"
+                  autoComplete="tel"
                   required
                 />
                 <Button type="submit" isLoading={loading} style={{ width: '100%', height: '52px' }}>
@@ -287,25 +413,38 @@ export default function LoginPage() {
                 </h2>
                 <p style={{ color: 'var(--text-dim)', lineHeight: 1.6, fontSize: '1.05rem' }}>
                   We've sent a 6-digit security code to
-                  <div style={{ color: '#1F4E79', fontWeight: 700, marginTop: '4px' }}>{email}</div>
+                  <div style={{ color: '#1F4E79', fontWeight: 700, marginTop: '4px' }}>
+                    {useMobile ? mobile : email}
+                  </div>
                 </p>
               </div>
 
-              {/* OTP boxes — no onComplete to avoid auto-submit */}
+              {/* Dev autofill banner — only visible when server returns devOtp */}
+              {devOtp && (
+                <div style={{
+                  background: '#FEF9C3', border: '1px dashed #EAB308',
+                  borderRadius: '10px', padding: '8px 14px', marginBottom: '16px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  fontSize: '0.8rem', fontWeight: 700,
+                }}>
+                  <span style={{ color: '#854D0E' }}>🛠 Dev OTP: <span style={{ letterSpacing: '3px', fontFamily: 'monospace', fontSize: '1rem' }}>{devOtp}</span></span>
+                  <button
+                    onClick={() => { setDevOtp(null); setOtp(['','','','','','']); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#854D0E', fontSize: '0.75rem', fontWeight: 800 }}
+                  >✕ clear</button>
+                </div>
+              )}
+
+              {/* ✅ Self-contained OtpInput — paste + mobile SMS autofill, no auto-submit */}
               <div style={{ marginBottom: '28px' }}>
                 <OtpInput
                   value={otp}
                   onChange={setOtp}
                   disabled={loading || isExpired}
-                  inputRefs={inputRefs}
-                  onKeyDown={handleOtpKeyDown}
-                  onPaste={handleOtpPaste}
-                  onCellChange={handleOtpChange}
-                  // ✅ onComplete intentionally omitted — button-only verify
                 />
               </div>
 
-              {/* Verify button — single trigger point */}
+              {/* Verify button — sole submission trigger */}
               <Button
                 onClick={handleVerifyOtp}
                 isLoading={loading}
@@ -322,7 +461,7 @@ export default function LoginPage() {
                   onClick={() => { setStep('email'); setOtp(['', '', '', '', '', '']); }}
                   style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '0.875rem' }}
                 >
-                  ← Change email
+                  ← {useMobile ? 'Change number' : 'Change email'}
                 </button>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>

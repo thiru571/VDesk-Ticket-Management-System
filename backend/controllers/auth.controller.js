@@ -276,10 +276,13 @@ const sendOtp = async (req, res, next) => {
     // =========================
 
     return res.json({
-      success: true,
-      message:
-        'OTP sent successfully. Check your email.'
-    });
+  success: true,
+  message: 'OTP sent successfully. Check your email.',
+  // ✅ Only sent in development — never exposed in production
+  ...(process.env.NODE_ENV === 'development' && {
+    devOtp: String(otp).padStart(6, '0')
+  })
+});
 
   } catch (err) {
 
