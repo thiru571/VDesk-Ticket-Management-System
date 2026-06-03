@@ -5,7 +5,8 @@ const {
   assignTicket, reopenTicket, submitFeedback,
   suggestPriority, findSimilarTickets, updatePriority, deleteTicket, updateTicket,
   requestHold, approveHold, rejectHold, resumeTicket, updateTicketDetails, triggerAutoAssign,
-  startOnSite, markArrived, confirmArrival
+  startOnSite, markArrived, confirmArrival,
+  acknowledgeTicket
 } = require('../controllers/ticket.controller');
 const {
   createReassignRequest, getReassignRequests, processReassignRequest
@@ -43,7 +44,15 @@ router.patch('/reassign/requests/:requestId', protect, authorize('admin'), proce
 router.post('/:id/start-onsite', protect, authorize('support_agent', 'admin'), startOnSite);
 router.post('/:id/arrive', protect, authorize('support_agent', 'admin'), markArrived);
 router.post('/:id/confirm-arrival', protect, confirmArrival);
-router.post('/:id/confirm-arrival', protect, confirmArrival);
+
+//acknowledgment Routes
+
+router.post(
+  '/:id/acknowledge',
+  protect,
+  authorize('admin'),
+  acknowledgeTicket
+);
 
 // Hold Request Routes
 router.post('/:id/request-hold', protect, authorize('support_agent', 'admin'), requestHold);

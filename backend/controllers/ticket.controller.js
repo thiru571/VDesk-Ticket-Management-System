@@ -199,7 +199,7 @@ const createTicket = async (req, res, next) => {
       ticket.autoAssigned = true;
 
       // Employee sees Pending
-      ticket.status = 'pending';
+      ticket.status = 'open';
 
       ticket.statusHistory.push({
         from: 'open',
@@ -1847,7 +1847,56 @@ const triggerAutoAssign = async (req, res, next) => {
   }
 };
 
+
+const acknowledgeTicket = async (req, res) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id);
+
+    if (!ticket) {
+      return res.status(404).json({
+        message: 'Ticket not found'
+      });
+    }
+
+    // First response timestamp (only once)
+    if (!ticket.firstResponseAt) {
+      ticket.firstResponseAt = new Date();
+
+      if (ticket.sla) {
+        ticket.sla.respondedAt = new Date();
+      }
+
+      // Add acknowledgement comment only once
+      await Comment.create({
+        ticket: ticket._id,
+        author: req.user._id,
+        content: 'We are working on your issue.',
+        isSystem: false
+      });
+    }
+
+    // Change status
+    ticket.status = 'in_progress';
+
+    await ticket.save();
+
+    res.json({
+      success: true,
+      message: 'Ticket acknowledged'
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Server Error'
+    });
+  }
+};
+
 module.exports = {
+
+  acknowledgeTicket,
   createTicket, getTickets, getTicket, updateStatus,
   assignTicket, reopenTicket, submitFeedback,
   suggestPriority, findSimilarTickets, updatePriority, deleteTicket, updateTicket,

@@ -28,7 +28,9 @@ export const ticketService = {
   rejectHold: (id, data) => api.post(`/tickets/${id}/reject-hold`, data),
   resumeTicket: (id) => api.post(`/tickets/${id}/resume`),
   getAgentPerformance: () => api.get('/analytics/agent-performance'),
-  autoAssign: (id) => api.patch(`/tickets/${id}/auto-assign`)
+  autoAssign: (id) => api.patch(`/tickets/${id}/auto-assign`),
+
+  acknowledge: (id) => api.post(`/tickets/${id}/acknowledge`)
 };
 
 export const emailService = {

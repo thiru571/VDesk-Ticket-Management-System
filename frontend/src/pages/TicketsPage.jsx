@@ -181,6 +181,24 @@ export default function TicketsPage() {
     }
   };
 
+  const handleAcknowledge = async (ticketId, e) => {
+        e.stopPropagation();
+
+        try {
+          await ticketService.acknowledgeTicket(ticketId);
+
+          toast.success('Ticket acknowledged successfully');
+
+          fetchTickets();
+          setActiveMenu(null);
+        } catch (err) {
+          toast.error(
+            err.response?.data?.message || 'Failed to acknowledge ticket'
+          );
+        }
+      };
+
+
   const KANBAN_COLUMNS = [
     { id: 'assigned',   title: 'Assigned',    color: 'var(--primary)' },
     { id: 'in_progress', title: 'In Progress', color: 'var(--warning)' },
@@ -468,14 +486,52 @@ export default function TicketsPage() {
                               onClick={e => e.stopPropagation()}
                             >
                               <div className="menu-item" onClick={() => navigate(`/tickets/${t._id}`)}><Eye size={14} /> View Details</div>
-                              {['admin', 'support_agent'].includes(user?.role) && t.status !== 'resolved' && (
-                                <div className="menu-item" onClick={e => handleAction(t._id, 'resolve', e)}><CheckSquare size={14} /> Mark Resolved</div>
-                              )}
-                              {user?.role === 'admin' && (
-                                <div className="menu-item danger" onClick={e => handleAction(t._id, 'delete', e)}><Trash2 size={14} /> Delete Ticket</div>
-                              )}
-                              <div className="menu-divider" />
-                              <div className="menu-item disabled" style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                              {/* {['admin', 'support_agent'].includes(user?.role) &&
+                          !t.firstResponseAt &&
+                          (t.status === 'open' || t.status === 'assigned') && (
+                            <div
+                              className="menu-item"
+                              onClick={(e) => handleAcknowledge(t._id, e)}
+                            >
+                              <CheckSquare size={14} /> Acknowledge Ticket
+                            </div>
+                          )} */}
+
+                          {true && (
+                            <div
+                              className="menu-item"
+                              onClick={(e) => handleAcknowledge(t._id, e)}
+                            >
+                              <CheckSquare size={14} /> Acknowledge Ticket
+                            </div>
+                          )}
+                          
+
+                          {['admin', 'support_agent'].includes(user?.role) &&
+                          t.status !== 'resolved' && (
+                            <div
+                              className="menu-item"
+                              onClick={(e) => handleAction(t._id, 'resolve', e)}
+                            >
+                              <CheckSquare size={14} /> Mark Resolved
+                            </div>
+                          )}
+
+                          {user?.role === 'admin' && (
+                            <div
+                              className="menu-item danger"
+                              onClick={(e) => handleAction(t._id, 'delete', e)}
+                            >
+                              <Trash2 size={14} /> Delete Ticket
+                            </div>
+                          )}
+
+                          <div className="menu-divider" />
+
+                          <div
+                            className="menu-item disabled"
+                            style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}
+                          >
                                 Updated {new Date(t.updatedAt).toLocaleDateString()}
                               </div>
                             </motion.div>

@@ -284,6 +284,7 @@ const sendOtp = async (req, res, next) => {
   })
 });
 
+
   } catch (err) {
 
     console.error(

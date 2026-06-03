@@ -194,7 +194,7 @@ export default function DashboardPage() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="page-layout">
         <div className="flex-between mb-8" style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #0F172A 100%)', padding: 'var(--s-8)', borderRadius: 'var(--r-xl)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 30px -10px rgba(30, 64, 175, 0.4)' }}>
           <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>How can we help, {user?.name.split(' ')[0]}?</h1>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>How can we help, {user?.name?.split(' ')[0] ?? 'there'}?</h1>
             <p style={{ opacity: 0.9 }}>Check the status of your requests or find answers in the knowledge base.</p>
           </div>
           <Button onClick={() => navigate('/tickets/new')} style={{ background: 'white', color: 'var(--text-main)', fontWeight: 700, borderRadius: 'var(--r-md)' }}>New Support Ticket</Button>
@@ -360,7 +360,7 @@ export default function DashboardPage() {
       <div className="flex-between mb-8 dashboard-hero" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #020617 100%)', padding: 'var(--s-8)', borderRadius: 'var(--r-xl)', color: 'white', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 10px 30px -10px rgba(30, 58, 138, 0.5)' }}>
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>
-            {user?.role === 'support_agent' ? `Ready for work, ${user?.name.split(' ')[0]}?` : 'Welcome back, Team!'}
+            {user?.role === 'support_agent' ? `Ready for work, ${user?.name?.split(' ')[0] ?? 'there'}?` : 'Welcome back, Team!'}
           </h1>
           <p style={{ opacity: 0.85 }}>
             {user?.role === 'support_agent' ? 'Here is a summary of your assigned tasks and performance today.' : 'Here’s your support performance overview for today.'}
