@@ -402,8 +402,9 @@ textarea.input {
 /* Toast Notifications */
 .toast-container {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  top: 24px;                  /* was: bottom: 24px */
+  left: 50%;                  /* was: right: 24px  */
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -421,16 +422,18 @@ textarea.input {
   font-weight: 500;
   font-size: 0.875rem;
   color: var(--text-main);
-  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   border-left: 4px solid var(--primary);
+  white-space: nowrap;        /* prevents text wrapping mid-toast */
 }
 
 .toast--success { border-left-color: var(--success); }
-.toast--error { border-left-color: var(--danger); }
+.toast--error   { border-left-color: var(--danger);  }
 .toast--warning { border-left-color: var(--warning); }
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(100%) scale(0.9); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-100%) scale(0.9); }  /* was: translateY(100%) */
+  to   { opacity: 1; transform: translateY(0)     scale(1);   }
 }
 
 /* --- Responsive Grids --- */

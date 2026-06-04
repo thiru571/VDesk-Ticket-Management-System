@@ -44,7 +44,6 @@ function AvatarUploadMenu({
   useEffect(() => {
     if (anchorRef?.current) {
       const rect = anchorRef.current.getBoundingClientRect();
-
       setCoords({
         top: rect.bottom + window.scrollY + 8,
         left: rect.left + window.scrollX + rect.width / 2,
@@ -54,6 +53,8 @@ function AvatarUploadMenu({
 
   return ReactDOM.createPortal(
     <motion.div
+      // FIX 3: data attribute so outside-click handler can detect portal clicks
+      data-avatar-menu="true"
       initial={{ opacity: 0, scale: 0.92, y: -6 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -6 }}
@@ -72,27 +73,22 @@ function AvatarUploadMenu({
         minWidth: "210px",
       }}
     >
-     <button
-  onClick={onUpload}
-  style={menuItemStyle}
-  onMouseEnter={e =>
-    (e.currentTarget.style.background = "var(--surface-alt)")
-  }
-  onMouseLeave={e =>
-    (e.currentTarget.style.background = "transparent")
-  }
->
-  <Upload size={16} />
-  <span>Upload from computer</span>
-</button>
+      <button
+        onClick={onUpload}
+        style={menuItemStyle}
+        onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-alt)")}
+        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+      >
+        <Upload size={16} />
+        <span>Upload from computer</span>
+      </button>
 
-     <button
-  onClick={() => {
-    console.log("Camera clicked");
-    onCamera();
-  }}
-  style={menuItemStyle}
->
+      <button
+        onClick={onCamera}
+        style={menuItemStyle}
+        onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-alt)")}
+        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+      >
         <Camera size={16} />
         <span>Take a photo</span>
       </button>
@@ -100,10 +96,7 @@ function AvatarUploadMenu({
       {hasAvatar && (
         <button
           onClick={onRemove}
-          style={{
-            ...menuItemStyle,
-            color: "var(--danger)",
-          }}
+          style={{ ...menuItemStyle, color: "var(--danger)" }}
         >
           <X size={16} />
           <span>Remove photo</span>
@@ -113,6 +106,7 @@ function AvatarUploadMenu({
     document.body
   );
 }
+
 // ─── Camera Modal ─────────────────────────────────────────────────────────────
 function CameraModal({ onCapture, onClose }) {
   const videoRef = useRef(null);
@@ -130,21 +124,16 @@ function CameraModal({ onCapture, onClose }) {
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       setStream(s);
-     if (videoRef.current) {
-  videoRef.current.srcObject = s;
-
-  videoRef.current.onloadedmetadata = () => {
-    videoRef.current.play();
-  };
-}
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+        };
+      }
     } catch (err) {
-  console.error(err);
-
-  setError(
-    err.message ||
-    "Camera access denied. Please allow camera permission."
-  );
-}
+      console.error(err);
+      setError(err.message || "Camera access denied. Please allow camera permission.");
+    }
   };
 
   const stopCamera = () => stream?.getTracks().forEach(t => t.stop());
@@ -160,7 +149,6 @@ function CameraModal({ onCapture, onClose }) {
   };
 
   const handleRetake = () => { setCaptured(null); startCamera(); };
-
   const handleUse = () => { onCapture(captured); onClose(); };
 
   return (
@@ -234,24 +222,26 @@ export default function ProfilePage() {
   const cameraButtonRef = useRef(null);
   const avatarMenuRef = useRef(null);
 
-  // Close dropdown on outside click
- useEffect(() => {
-  const handler = (e) => {
-    if (
-      avatarMenuRef.current &&
-      !avatarMenuRef.current.contains(e.target) &&
-      cameraButtonRef.current &&
-      !cameraButtonRef.current.contains(e.target)
-    ) {
-      setShowAvatarMenu(false);
-    }
-  };
+  // FIX 3: Close dropdown on outside click — but ignore clicks inside the portal menu
+  useEffect(() => {
+    const handler = (e) => {
+      // Portal menu is outside avatarMenuRef (it's in document.body),
+      // so explicitly ignore mousedown events that land inside it.
+      if (e.target.closest('[data-avatar-menu]')) return;
 
-  document.addEventListener("mousedown", handler);
+      if (
+        avatarMenuRef.current &&
+        !avatarMenuRef.current.contains(e.target) &&
+        cameraButtonRef.current &&
+        !cameraButtonRef.current.contains(e.target)
+      ) {
+        setShowAvatarMenu(false);
+      }
+    };
 
-  return () =>
-    document.removeEventListener("mousedown", handler);
-}, []);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const [profile, setProfile] = useState({
     name: user?.name || '',
@@ -271,44 +261,28 @@ export default function ProfilePage() {
 
   // ── Avatar handlers ──────────────────────────────────────────────────────
   const handleFileSelect = (e) => {
-  console.log("File input changed");
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const file = e.target.files?.[0];
-
-  if (!file) {
-    console.log("No file selected");
-    return;
-  }
-
-  console.log("Selected file:", file);
-
-  if (!file.type.startsWith("image/")) {
-    toast.error("Please select an image");
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = async (event) => {
-    const dataUrl = event.target.result;
-
-    console.log("Image loaded");
-
-    setAvatarUrl(dataUrl);
-
-    try {
-      await uploadAvatar(dataUrl);
-      toast.success("Profile photo updated");
-    } catch (err) {
-      console.error(err);
-      toast.error("Upload failed");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image");
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target.result;
+      setAvatarUrl(dataUrl);
+      try {
+        await uploadAvatar(dataUrl);
+      } catch (err) {
+        console.error(err);
+        toast.error("Upload failed");
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
-
-  reader.readAsDataURL(file);
-
-  e.target.value = "";
-};
 
   const handleCameraCapture = async (dataUrl) => {
     setAvatarUrl(dataUrl);
@@ -328,12 +302,8 @@ export default function ProfilePage() {
   const uploadAvatar = async (dataUrl) => {
     try {
       const res = await userService.updateProfile({ avatar: dataUrl });
-     const updatedUser =
-  res?.data?.user ||
-  res?.data?.data ||
-  res?.data;
-
-updateUser(updatedUser);
+      const updatedUser = res?.data?.user || res?.data?.data || res?.data;
+      updateUser(updatedUser);
       toast.success('Profile photo updated');
     } catch { toast.error('Failed to upload photo'); }
   };
@@ -362,18 +332,16 @@ updateUser(updatedUser);
     finally { setLoading(false); }
   };
 
-
   return (
     <>
       {/* Hidden file input */}
-    <input
-  ref={fileInputRef}
-  type="file"
-  accept="image/*"
-  onChange={handleFileSelect}
-  style={{ display: "none" }}
-/>
-
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        style={{ display: "none" }}
+      />
 
       {/* Camera modal */}
       <AnimatePresence>
@@ -434,8 +402,17 @@ updateUser(updatedUser);
                   <AvatarUploadMenu
                     anchorRef={cameraButtonRef}
                     hasAvatar={!!avatarUrl}
-                    onUpload={() => { setShowAvatarMenu(false); fileInputRef.current?.click(); }}
-                    onCamera={() => { setShowAvatarMenu(false); setShowCameraModal(true); }}
+                    onUpload={() => {
+                      // FIX 1: Defer click until after the menu's exit animation completes,
+                      // so the file dialog isn't swallowed mid-unmount.
+                      setShowAvatarMenu(false);
+                      setTimeout(() => fileInputRef.current?.click(), 150);
+                    }}
+                    onCamera={() => {
+                      // FIX 2: Same deferral for the camera modal.
+                      setShowAvatarMenu(false);
+                      setTimeout(() => setShowCameraModal(true), 150);
+                    }}
                     onRemove={handleRemoveAvatar}
                     onClose={() => setShowAvatarMenu(false)}
                   />
@@ -474,7 +451,7 @@ updateUser(updatedUser);
           {/* Sidebar */}
           <div className="flex-col gap-2">
             {[
-              { id: 'profile',       label: 'General info',   icon: User   },
+              { id: 'profile',       label: 'General info',    icon: User   },
               { id: 'security',      label: 'Security & Auth', icon: Shield },
               { id: 'notifications', label: 'Notifications',   icon: Bell   },
             ].map(tab => (
@@ -572,10 +549,10 @@ updateUser(updatedUser);
                   <Card title="Communication Preferences" subtitle="Manage how and when you receive updates about your tickets.">
                     <div className="flex-col gap-6">
                       {[
-                        { id: 'email',    label: 'Email Notifications', desc: 'Receive status updates and replies via email.'          },
-                        { id: 'inApp',    label: 'In-App Alerts',       desc: 'Show real-time toast notifications in the portal.'      },
-                        { id: 'onAssign', label: 'Assignment Alerts',   desc: 'Notify me when I am assigned to a ticket.'             },
-                        { id: 'onComment',label: 'Comment Alerts',      desc: 'Notify me when someone comments on my tickets.'        },
+                        { id: 'email',     label: 'Email Notifications', desc: 'Receive status updates and replies via email.'          },
+                        { id: 'inApp',     label: 'In-App Alerts',       desc: 'Show real-time toast notifications in the portal.'      },
+                        { id: 'onAssign',  label: 'Assignment Alerts',   desc: 'Notify me when I am assigned to a ticket.'             },
+                        { id: 'onComment', label: 'Comment Alerts',      desc: 'Notify me when someone comments on my tickets.'        },
                       ].map(pref => (
                         <div key={pref.id} className="flex-between" style={{ padding: '16px 20px', background: 'var(--surface-alt)', borderRadius: '16px', border: '1px solid var(--border)' }}>
                           <div className="flex-col">
