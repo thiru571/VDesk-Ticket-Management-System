@@ -20,7 +20,7 @@ import {
   Zap,
   Ticket as TicketIcon
 } from 'lucide-react';
-import Logo from '../../assets/logo.svg';
+import Logo from '../../assets/logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { useToast } from '../../context/ToastContext';

@@ -7,7 +7,7 @@ import { Button, Input } from '../ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { useOtpTimer } from '../hooks/useOtpTimer';
-import Logo from '../assets/logo.svg';
+import Logo from '../assets/logo.png';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline OtpInput — self-contained, no prop-threading issues
