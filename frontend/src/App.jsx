@@ -25,6 +25,7 @@ import AgentPerformancePage from './pages/AgentPerformancePage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
+// import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
@@ -66,6 +67,7 @@ const AppRoutes = () => (
       <Route path="knowledge/:id"      element={<KnowledgeArticlePage />} />
       <Route path="profile"            element={<ProfilePage />} />
       <Route path="/notifications" element={<NotificationPage />} />
+     
       
       {/* Admin Specific */}
       <Route path="admin/users"        element={<ProtectedRoute roles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
