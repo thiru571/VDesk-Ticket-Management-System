@@ -2,9 +2,7 @@
 
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-
 const bcrypt = require('bcryptjs');
-
 
 const User = require('../models/User.model');
 const AuditLog = require('../models/AuditLog.model');
@@ -15,27 +13,14 @@ const {
   sendOtpEmail
 } = require('../services/email.service');
 
-/**
- * Generate JWT token for user
- */
 const generateToken = (user) => {
   return jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-      email: user.email,
-      department: user.department
-    },
+    { id: user._id, role: user.role, email: user.email, department: user.department },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE || '7d' }
   );
 };
 
-/**
- * Step 1 — Employee submits company email for verification
- * POST /api/auth/request-verification
- * Public
- */
 const requestVerification = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -54,7 +39,7 @@ const requestVerification = async (req, res, next) => {
 
     const rawToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     if (user) {
       user.verificationToken = hashedToken;
@@ -87,11 +72,6 @@ const requestVerification = async (req, res, next) => {
   }
 };
 
-/**
- * Step 2 — Employee clicks verification link
- * GET /api/auth/verify-email?token=xxx&email=xxx
- * Public
- */
 const verifyEmail = async (req, res, next) => {
   try {
     const { token, email } = req.query;
@@ -116,407 +96,103 @@ const verifyEmail = async (req, res, next) => {
   }
 };
 
-/**
- * Step 1 of login — send OTP only to active users
- * POST /api/auth/send-otp
- * Public
- */
-
-
-
-
-
-
-// ======================================================
-// SEND OTP
-// POST /api/auth/send-otp
-// ======================================================
-
 const sendOtp = async (req, res, next) => {
-
   try {
-
     const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
-    // =========================
-    // Validate Email
-    // =========================
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required'
-      });
-    }
-
-    const normalizedEmail = email
-      .toLowerCase()
-      .trim();
-
-    // =========================
-    // Allow Only Company Emails
-    // =========================
-
-    const isAllowedDomain =
-      normalizedEmail.endsWith('@vdartinc.com') ||
-      normalizedEmail.endsWith('@ndartinc.com');
-
+    const normalizedEmail = email.toLowerCase().trim();
+    const isAllowedDomain = normalizedEmail.endsWith('@vdartinc.com') || normalizedEmail.endsWith('@ndartinc.com');
     if (!isAllowedDomain) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'Only @vdartinc.com or @ndartinc.com emails are permitted.'
-      });
+      return res.status(400).json({ success: false, message: 'Only @vdartinc.com or @ndartinc.com emails are permitted.' });
     }
 
-    // =========================
-    // Find User
-    // =========================
-
-    const user = await User.findOne({
-      email: normalizedEmail
-    }).select(
-      '+otp +otpExpiry +otpAttempts +otpLockedUntil'
-    );
-
+    const user = await User.findOne({ email: normalizedEmail }).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
     if (!user || !user.isActive) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'No active account found for this email.'
-      });
+      return res.status(404).json({ success: false, message: 'No active account found for this email.' });
     }
 
-    // =========================
-    // Generate OTP
-    // =========================
-
-    const otp = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
-
-    // =========================
-    // Hash OTP
-    // =========================
-
-    const hashedOtp = crypto
-      .createHash('sha256')
-      .update(String(otp).trim())
-      .digest('hex');
-
-    // =========================
-    // Save OTP
-    // =========================
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
 
     user.otp = hashedOtp;
-    console.log('GENERATED OTP:', otp);
-
-    user.otpExpiry = new Date(
-      Date.now() + 5 * 60 * 1000
-    );
-
+    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
     user.otpAttempts = 0;
-
     user.otpLockedUntil = null;
-
-    await user.save({
-      validateBeforeSave: false
-    });
-
-    console.log('OTP SAVED SUCCESSFULLY');
-
-    // =========================
-    // Audit Log
-    // =========================
+    await user.save({ validateBeforeSave: false });
 
     try {
-
-      await AuditLog.create({
-        event: 'OTP_SENT',
-        email: normalizedEmail,
-        ip: req.ip,
-        userAgent: req.headers['user-agent']
-      });
-
+      await AuditLog.create({ event: 'OTP_SENT', email: normalizedEmail, ip: req.ip, userAgent: req.headers['user-agent'] });
     } catch (logErr) {
-
-      console.error(
-        'AuditLog Error:',
-        logErr.message
-      );
+      console.error('AuditLog Error:', logErr.message);
     }
-
-    // =========================
-    // Send Email
-    // =========================
 
     try {
-
-      await sendOtpEmail({
-        to: normalizedEmail,
-        otp
-      });
-
+      await sendOtpEmail({ to: normalizedEmail, otp });
     } catch (emailErr) {
-
-      console.error(
-        'sendOtpEmail Error:',
-        emailErr.message
-      );
-
-      return res.status(500).json({
-        success: false,
-        message:
-          'Failed to send OTP email.'
-      });
+      console.error('sendOtpEmail Error:', emailErr.message);
+      return res.status(500).json({ success: false, message: 'Failed to send OTP email.' });
     }
-
-    // =========================
-    // Success Response
-    // =========================
 
     return res.json({
-  success: true,
-  message: 'OTP sent successfully. Check your email.',
-  // ✅ Only sent in development — never exposed in production
-  ...(process.env.NODE_ENV === 'development' && {
-    devOtp: String(otp).padStart(6, '0')
-  })
-});
-
-
+      success: true,
+      message: 'OTP sent successfully. Check your email.',
+      ...(process.env.NODE_ENV === 'development' && { devOtp: String(otp).padStart(6, '0') })
+    });
   } catch (err) {
-
-    console.error(
-      'SEND OTP ERROR:',
-      err
-    );
-
     next(err);
   }
 };
 
-
-// ======================================================
-// VERIFY OTP
-// POST /api/auth/verify-otp
-// ======================================================
-
- const verifyOtp = async (req, res, next) => {
-
+const verifyOtp = async (req, res, next) => {
   try {
-
     const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and OTP are required' });
 
-    console.log('VERIFY REQUEST:', req.body);
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    // =========================
-    // Validate Input
-    // =========================
-
-    if (!email || !otp) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'Email and OTP are required'
-      });
+    if (user.otpLockedUntil && user.otpLockedUntil > new Date()) {
+      const remainingMinutes = Math.ceil((user.otpLockedUntil - new Date()) / 60000);
+      return res.status(403).json({ success: false, message: `Account locked. Try again in ${remainingMinutes} minutes.` });
     }
 
-    const normalizedEmail = email
-      .toLowerCase()
-      .trim();
+    if (!user.otp) return res.status(400).json({ success: false, message: 'No OTP found. Please request a new OTP.' });
+    if (!user.otpExpiry || user.otpExpiry < new Date()) return res.status(400).json({ success: false, message: 'OTP expired. Please request a new OTP.' });
 
-    // =========================
-    // Find User
-    // =========================
-
-    const user = await User.findOne({
-      email: normalizedEmail
-    }).select(
-      '+otp +otpExpiry +otpAttempts +otpLockedUntil'
-    );
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    // =========================
-    // Check Account Lock
-    // =========================
-
-    if (
-      user.otpLockedUntil &&
-      user.otpLockedUntil > new Date()
-    ) {
-
-      const remainingMinutes = Math.ceil(
-        (user.otpLockedUntil - new Date()) / 60000
-      );
-
-      return res.status(403).json({
-        success: false,
-        message:
-          `Account locked. Try again in ${remainingMinutes} minutes.`
-      });
-    }
-
-    // =========================
-    // Check OTP Exists
-    // =========================
-
-    if (!user.otp) {
-
-      return res.status(400).json({
-        success: false,
-        message:
-          'No OTP found. Please request a new OTP.'
-      });
-    }
-
-    // =========================
-    // Check OTP Expiry
-    // =========================
-
-    if (
-      !user.otpExpiry ||
-      user.otpExpiry < new Date()
-    ) {
-
-      return res.status(400).json({
-        success: false,
-        message:
-          'OTP expired. Please request a new OTP.'
-      });
-    }
-
-    // =========================
-    // Hash Entered OTP
-    // =========================
-
-    const hashedOtp = crypto
-      .createHash('sha256')
-      .update(String(otp).trim())
-      .digest('hex');
-
-    console.log(
-      'HASHED INPUT OTP:',
-      hashedOtp
-    );
-
-    console.log(
-      'DATABASE OTP:',
-      user.otp
-    );
-
-    // =========================
-    // Compare OTP
-    // =========================
+    const hashedOtp = crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
 
     if (hashedOtp !== user.otp) {
-
       user.otpAttempts += 1;
-
-      // ======================
-      // Audit Log
-      // ======================
-
-      await AuditLog.create({
-        event: 'OTP_FAILED',
-        email: user.email,
-        ip: req.ip,
-        meta: {
-          attempts: user.otpAttempts
-        }
-      });
-
-      // ======================
-      // Lock Account
-      // ======================
+      await AuditLog.create({ event: 'OTP_FAILED', email: user.email, ip: req.ip, meta: { attempts: user.otpAttempts } });
 
       if (user.otpAttempts >= 3) {
-
-        user.otpLockedUntil =
-          new Date(
-            Date.now() + 15 * 60 * 1000
-          );
-
-        await user.save({
-          validateBeforeSave: false
-        });
-
-        await AuditLog.create({
-          event: 'OTP_LOCKED',
-          email: user.email,
-          ip: req.ip,
-          meta: {
-            lockedUntil:
-              user.otpLockedUntil
-          }
-        });
-
-        return res.status(403).json({
-          success: false,
-          message:
-            'Too many incorrect attempts. Account locked for 15 minutes.'
-        });
+        user.otpLockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+        await user.save({ validateBeforeSave: false });
+        await AuditLog.create({ event: 'OTP_LOCKED', email: user.email, ip: req.ip, meta: { lockedUntil: user.otpLockedUntil } });
+        return res.status(403).json({ success: false, message: 'Too many incorrect attempts. Account locked for 15 minutes.' });
       }
 
-      await user.save({
-        validateBeforeSave: false
-      });
-
-      return res.status(400).json({
-        success: false,
-        message:
-          `Incorrect OTP. ${3 - user.otpAttempts} attempts remaining.`
-      });
+      await user.save({ validateBeforeSave: false });
+      return res.status(400).json({ success: false, message: `Incorrect OTP. ${3 - user.otpAttempts} attempts remaining.` });
     }
-
-    // =========================
-    // OTP SUCCESS
-    // =========================
 
     user.otp = undefined;
     user.otpExpiry = undefined;
     user.otpAttempts = 0;
     user.otpLockedUntil = null;
     user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
 
-    await user.save({
-      validateBeforeSave: false
-    });
-
-    // =========================
-    // Audit Success
-    // =========================
-
-    await AuditLog.create({
-      event: 'OTP_SUCCESS',
-      email: user.email,
-      ip: req.ip
-    });
-
-    // =========================
-    // Generate JWT
-    // =========================
+    await AuditLog.create({ event: 'OTP_SUCCESS', email: user.email, ip: req.ip });
 
     const token = generateToken(user);
 
-    // =========================
-    // Final Response
-    // =========================
-
     return res.json({
       success: true,
-
-      message:
-        'OTP verified successfully',
-
+      message: 'OTP verified successfully',
       token,
-
       user: {
         _id: user._id,
         name: user.name,
@@ -526,29 +202,16 @@ const sendOtp = async (req, res, next) => {
         userType: user.userType,
         designation: user.designation,
         avatar: user.avatar,
-        preferredContact:
-          user.preferredContact,
-        notificationPreferences:
-          user.notificationPreferences,
+        preferredContact: user.preferredContact,
+        notificationPreferences: user.notificationPreferences,
         location: user.location
       }
     });
-
   } catch (err) {
-
-    console.error(
-      'VERIFY OTP ERROR:',
-      err
-    );
-
     next(err);
   }
 };
-/**
- * Disabled password login
- * POST /api/auth/login
- * Public
- */
+
 const login = async (req, res, next) => {
   try {
     res.status(403).json({ success: false, message: 'Password login is disabled. Please use OTP-only login.' });
@@ -557,20 +220,24 @@ const login = async (req, res, next) => {
   }
 };
 
-/**
- * Get current authenticated user
- * GET /api/auth/me
- * Private
- */
-const getMe = async (req, res) => {
-  res.json({ success: true, user: req.user });
+// ─── FIX: fetch full user from DB instead of returning req.user (JWT payload) ──
+// req.user only contains: id, role, email, department — NO avatar, name, location etc.
+// Without this fix, every page refresh strips the avatar and any profile fields
+// not baked into the token.
+const getMe = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select(
+      '_id name email role department userType designation avatar preferredContact notificationPreferences location stats'
+    );
+
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    res.json({ success: true, user });
+  } catch (err) {
+    next(err);
+  }
 };
 
-/**
- * Admin — create or activate user
- * POST /api/auth/admin/create-user
- * Private (admin)
- */
 const adminCreateUser = async (req, res, next) => {
   try {
     const { email, name, role, department, designation, employeeId, password } = req.body;
@@ -591,24 +258,17 @@ const adminCreateUser = async (req, res, next) => {
       if (password) user.password = password;
     } else {
       user = new User({
-        email: normalizedEmail,
-        name,
-        role: role || 'employee',
-        department: department || 'Other',
-        designation: designation || '',
-        employeeId,
-        password: password || undefined,
-        isVerified: true,
-        isActive: true,
-        createdByAdmin: true
+        email: normalizedEmail, name, role: role || 'employee',
+        department: department || 'Other', designation: designation || '',
+        employeeId, password: password || undefined,
+        isVerified: true, isActive: true, createdByAdmin: true
       });
     }
 
     await user.save();
-
     res.status(201).json({
       success: true,
-      message: 'User account created. Credentials stored securely — share manually if needed.',
+      message: 'User account created.',
       user: { _id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (err) {
@@ -616,11 +276,6 @@ const adminCreateUser = async (req, res, next) => {
   }
 };
 
-/**
- * Admin — reset user's password
- * PUT /api/auth/admin/reset-password
- * Private (admin)
- */
 const adminResetPassword = async (req, res, next) => {
   try {
     const { userId, newPassword } = req.body;
@@ -632,8 +287,7 @@ const adminResetPassword = async (req, res, next) => {
 
     user.password = newPassword;
     await user.save();
-
-    res.json({ success: true, message: 'Password updated and stored securely. Share with the employee manually if needed.' });
+    res.json({ success: true, message: 'Password updated.' });
   } catch (err) {
     next(err);
   }
@@ -641,68 +295,52 @@ const adminResetPassword = async (req, res, next) => {
 
 const changePassword = async (req, res, next) => {
   try {
-
     const userId = req.user.id;
-
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(userId)
-      .select('+password');
+    const user = await User.findById(userId).select('+password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ success: false, message: 'Current password is incorrect' });
 
-    const isMatch = await bcrypt.compare(
-      currentPassword,
-      user.password
-    );
-
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password is incorrect'
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    user.password = hashedPassword;
-
+    user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: 'Password changed successfully'
-    });
-
+    res.status(200).json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     next(error);
   }
 };
 
-const UptadeProfile = async(req,res)=>{
-  try{
+// ─── FIX: added avatar and notificationPreferences to updateProfile ───────────
+const UptadeProfile = async (req, res, next) => {
+  try {
     const userId = req.user.id;
-    const { name, department, designation, preferredContact, location } = req.body;
+    const {
+      name,
+      department,
+      designation,
+      preferredContact,
+      location,
+      avatar,                    // ← was missing
+      notificationPreferences,   // ← was missing
+      phone,                     // ← was missing
+    } = req.body;
 
     const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+    if (name !== undefined)                user.name = name;
+    if (department !== undefined)          user.department = department;
+    if (designation !== undefined)         user.designation = designation;
+    if (preferredContact !== undefined)    user.preferredContact = preferredContact;
+    if (phone !== undefined)               user.phone = phone;
+    if (location !== undefined)            user.location = { ...user.location, ...location };
+    if (avatar !== undefined)              user.avatar = avatar;   // null clears it, string sets it
+    if (notificationPreferences !== undefined) {
+      user.notificationPreferences = { ...user.notificationPreferences, ...notificationPreferences };
     }
-
-    user.name = name || user.name;
-    user.department = department || user.department;
-    user.designation = designation || user.designation;
-    user.preferredContact = preferredContact || user.preferredContact;
-    user.location = location || user.location;
 
     await user.save();
 
@@ -717,15 +355,14 @@ const UptadeProfile = async(req,res)=>{
         department: user.department,
         designation: user.designation,
         preferredContact: user.preferredContact,
-        location: user.location
+        phone: user.phone,
+        location: user.location,
+        avatar: user.avatar,                           // ← now returned
+        notificationPreferences: user.notificationPreferences, // ← now returned
       }
     });
-  }
-  catch(error){
-    res.status(500).json({
-      success: false,
-      message: 'An error occurred while updating profile'
-    });
+  } catch (error) {
+    next(error);
   }
 };
 

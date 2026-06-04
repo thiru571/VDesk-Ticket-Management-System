@@ -3,8 +3,26 @@ import api from '../services/api';
 
 const AuthContext = createContext(null);
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+const USER_KEY = 'user_data';
+
+const saveUser = (user) => {
+  try { localStorage.setItem(USER_KEY, JSON.stringify(user)); } catch {}
+};
+
+const loadUser = () => {
+  try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
+};
+
+const clearUser = () => {
+  try { localStorage.removeItem(USER_KEY); } catch {}
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // FIX: seed state from localStorage so avatar/name survive a hard refresh
+  // before the /auth/me response arrives.
+  const [user, setUser] = useState(() => loadUser());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -12,15 +30,19 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       api.get('/auth/me')
-        .then(res => setUser(res.data.user))
+        .then(res => {
+          const freshUser = res.data.user;
+          setUser(freshUser);
+          saveUser(freshUser); // keep localStorage in sync with server
+        })
         .catch((err) => {
-          // Only clear token if it's actually invalid/expired (401)
-          // Don't log out if it's a network error or server (500) error
           if (err.response?.status === 401) {
             localStorage.removeItem('token');
             delete api.defaults.headers.common['Authorization'];
+            clearUser();
             setUser(null);
           }
+          // network/500 errors: keep the cached user so UI doesn't blank out
         })
         .finally(() => setLoading(false));
     } else {
@@ -32,6 +54,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
+    saveUser(userData);
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -40,6 +63,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(user);
+    saveUser(user);
     return user;
   }, []);
 
@@ -49,13 +73,36 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(user);
+    saveUser(user);
     return user;
   }, []);
 
-  const logout = useCallback(() => { localStorage.removeItem('token'); delete api.defaults.headers.common['Authorization']; setUser(null); window.location.href = '/login'; }, []);
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
+    clearUser();
+    setUser(null);
+    window.location.href = '/login';
+  }, []);
 
+  // FIX: deep-merge so partial updates (e.g. just avatar) don't wipe other fields.
+  // Also persists the merged result so it survives refresh.
   const updateUser = useCallback((updatedUser) => {
-    setUser(prev => ({ ...prev, ...updatedUser }));
+    setUser(prev => {
+      const merged = {
+        ...prev,
+        ...updatedUser,
+        // deep-merge one level for nested objects (location, stats, notificationPreferences)
+        ...(prev?.location || updatedUser?.location
+          ? { location: { ...prev?.location, ...updatedUser?.location } }
+          : {}),
+        ...(prev?.notificationPreferences || updatedUser?.notificationPreferences
+          ? { notificationPreferences: { ...prev?.notificationPreferences, ...updatedUser?.notificationPreferences } }
+          : {}),
+      };
+      saveUser(merged);
+      return merged;
+    });
   }, []);
 
   return (
@@ -70,4 +117,3 @@ export const useAuth = () => {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };
-
