@@ -1307,69 +1307,111 @@ const confirmFix = async (req, res, next) => {
 const requestHold = async (req, res, next) => {
   try {
     const { reason } = req.body;
-    if (!reason) return res.status(400).json({ success: false, message: 'Reason for hold is required' });
 
-    const ticket = await Ticket.findById(req.params.id);
-    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
-
-    if (ticket.assignedTo?.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Only the assigned agent can request hold' });
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reason for hold is required'
+      });
     }
 
-    // Check if this admin already has a ticket on hold (if that's the rule)
-    // "Only one admin can hold a ticket at a time" -> interpreted as "An admin can only hold one ticket"
-    if (req.user.role === 'admin') {
-      const existingHold = await Ticket.findOne({ 'hold.approvedBy': req.user._id, status: 'on_hold' });
-      if (existingHold) {
-        return res.status(400).json({ success: false, message: `You already have ticket ${existingHold.ticketId} on hold. You can only hold one ticket at a time.` });
-      }
+    const ticket = await Ticket.findById(req.params.id);
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found'
+      });
+    }
+
+    // Only assigned agent or admin
+    if (
+      ticket.assignedTo?.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only the assigned agent can request hold'
+      });
+    }
+
+    // Already pending
+    if (ticket.holdRequest?.status === 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'A hold request is already pending approval'
+      });
     }
 
     const oldStatus = ticket.status;
-    // Use the new holdRequest field
+
+    // Keep ticket active until admin approval
+    ticket.status = 'in_progress';
+
+    // Hold Request
     ticket.holdRequest = {
-      reason,
+      requestedBy: req.user._id,
+      reason: reason.trim(),
+      status: 'pending',
+      requestedAt: new Date()
+    };
+
+    // Hold Details
+    ticket.hold = {
+      isHoldRequested: true,
+      reason: reason.trim(),
       requestedBy: req.user._id,
       requestedAt: new Date(),
       status: 'pending'
     };
 
+    // History
+    if (!ticket.statusHistory) {
+      ticket.statusHistory = [];
+    }
+
     ticket.statusHistory.push({
       from: oldStatus,
-      to: 'pending_hold',
+      to: oldStatus,
       changedBy: req.user._id,
       reason: `Hold requested: ${reason}`
     });
 
+    ticket.markModified('hold');
+    ticket.markModified('holdRequest');
+
     await ticket.save();
 
-    // Notify department admin for approval
-    // Assuming department admin is available via ticket.assignedDepartment.adminId
-    const deptAdmin = await User.findById(ticket.assignedDepartment.adminId);
-    if (deptAdmin) {
-      createNotification({
-        recipientId: deptAdmin._id,
+    // Notify admins
+    const admins = await User.find({
+      role: 'admin',
+      isActive: true
+    });
+
+    for (const admin of admins) {
+      await createNotification({
+        recipientId: admin._id,
         type: 'hold_request',
-        title: 'Hold Request Pending',
-        message: `Agent ${req.user.name} requested to put ticket ${ticket.ticketId} on hold. Reason: ${reason}`,
+        title: 'Hold Request Pending Approval',
+        message: `${req.user.name} requested hold for ticket ${ticket.ticketId}. Reason: ${reason}`,
         ticketId: ticket._id
       });
-      emitToUser(deptAdmin._id.toString(), 'hold_requested', {
-        ticketId: ticket.ticketId,
-        agentName: req.user.name,
-        reason
-      });
-    } else {
-      // Fallback to super_admin or general admin if no specific dept admin
-      emitToRole('super_admin', 'hold_requested', {
+
+      emitToUser(admin._id.toString(), 'hold_requested', {
         ticketId: ticket.ticketId,
         agentName: req.user.name,
         reason
       });
     }
 
-    res.json({ success: true, message: 'Hold request submitted for team approval.', ticket });
+    return res.status(200).json({
+      success: true,
+      message: 'Hold request submitted for admin approval',
+      ticket
+    });
+
   } catch (err) {
+    console.error('Request Hold Error:', err);
     next(err);
   }
 };
