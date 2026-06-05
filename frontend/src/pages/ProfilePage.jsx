@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
+import { KeyRound } from "lucide-react";
 import {
   User,
   Mail,
@@ -876,13 +877,13 @@ export default function ProfilePage() {
                       }}
                     >
                       <Button
-                        type="button"
-                        variant="outline"
-                        leftIcon={<Key size={18} />}
-                        onClick={handleForgotPassword}
-                      >
-                        Forgot Password
-                      </Button>
+  type="button"
+  variant="outline"
+  leftIcon={<KeyRound size={18} />}
+  onClick={handleForgotPassword}
+>
+  Forgot Password
+</Button>
                       <Button
                         type="button"
                         isLoading={loading}
