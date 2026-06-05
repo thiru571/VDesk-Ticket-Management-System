@@ -1,5 +1,3 @@
-// auth.controller.js
-
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
@@ -99,50 +97,111 @@ const verifyEmail = async (req, res, next) => {
 const sendOtp = async (req, res, next) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const isAllowedDomain = normalizedEmail.endsWith('@vdartinc.com') || normalizedEmail.endsWith('@ndartinc.com');
+
+    const isAllowedDomain =
+      normalizedEmail.endsWith('@vdartinc.com') ||
+      normalizedEmail.endsWith('@ndartinc.com');
+
     if (!isAllowedDomain) {
-      return res.status(400).json({ success: false, message: 'Only @vdartinc.com or @ndartinc.com emails are permitted.' });
+      return res.status(400).json({
+        success: false,
+        message: 'Only @vdartinc.com or @ndartinc.com emails are permitted.'
+      });
     }
 
-    const user = await User.findOne({ email: normalizedEmail }).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
+    const user = await User.findOne({
+      email: normalizedEmail
+    }).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
+
     if (!user || !user.isActive) {
-      return res.status(404).json({ success: false, message: 'No active account found for this email.' });
+      return res.status(404).json({
+        success: false,
+        message: 'No active account found for this email.'
+      });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedOtp = crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
+    // Generate OTP
+    const otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
 
+    // Print OTP in console
+    console.log('================================');
+    console.log('EMAIL:', normalizedEmail);
+    console.log('GENERATED OTP:', otp);
+    console.log('================================');
+
+    // Hash OTP
+    const hashedOtp = crypto
+      .createHash('sha256')
+      .update(otp.trim())
+      .digest('hex');
+
+    // Save OTP details
     user.otp = hashedOtp;
-    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
     user.otpAttempts = 0;
     user.otpLockedUntil = null;
-    await user.save({ validateBeforeSave: false });
 
+    await user.save({
+      validateBeforeSave: false
+    });
+
+    console.log('OTP SAVED SUCCESSFULLY');
+
+    // Audit Log
     try {
-      await AuditLog.create({ event: 'OTP_SENT', email: normalizedEmail, ip: req.ip, userAgent: req.headers['user-agent'] });
+      await AuditLog.create({
+        event: 'OTP_SENT',
+        email: normalizedEmail,
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      });
     } catch (logErr) {
       console.error('AuditLog Error:', logErr.message);
     }
 
+    // Send Email
     try {
-      await sendOtpEmail({ to: normalizedEmail, otp });
+      await sendOtpEmail({
+        to: normalizedEmail,
+        otp
+      });
+
+      console.log(`📧 OTP email sent to ${normalizedEmail}`);
     } catch (emailErr) {
       console.error('sendOtpEmail Error:', emailErr.message);
-      return res.status(500).json({ success: false, message: 'Failed to send OTP email.' });
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP email.'
+      });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: 'OTP sent successfully. Check your email.',
-      ...(process.env.NODE_ENV === 'development' && { devOtp: String(otp).padStart(6, '0') })
+
+      ...(process.env.NODE_ENV === 'development' && {
+        devOtp: otp
+      })
     });
+
   } catch (err) {
+    console.error('SEND OTP ERROR:', err);
     next(err);
   }
 };
+
 
 const verifyOtp = async (req, res, next) => {
   try {

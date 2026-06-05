@@ -185,13 +185,15 @@ export default function TicketsPage() {
         e.stopPropagation();
 
         try {
-          await ticketService.acknowledgeTicket(ticketId);
+          await ticketService.acknowledge(ticketId);
 
           toast.success('Ticket acknowledged successfully');
 
           fetchTickets();
           setActiveMenu(null);
         } catch (err) {
+
+          console.error("ACK ERROR:", err);
           toast.error(
             err.response?.data?.message || 'Failed to acknowledge ticket'
           );
@@ -486,7 +488,7 @@ export default function TicketsPage() {
                               onClick={e => e.stopPropagation()}
                             >
                               <div className="menu-item" onClick={() => navigate(`/tickets/${t._id}`)}><Eye size={14} /> View Details</div>
-                              {/* {['admin', 'support_agent'].includes(user?.role) &&
+                              {['admin', 'support_agent'].includes(user?.role) &&
                           !t.firstResponseAt &&
                           (t.status === 'open' || t.status === 'assigned') && (
                             <div
@@ -495,16 +497,16 @@ export default function TicketsPage() {
                             >
                               <CheckSquare size={14} /> Acknowledge Ticket
                             </div>
-                          )} */}
+                          )}
 
-                          {true && (
+                          {/* {true && (
                             <div
                               className="menu-item"
                               onClick={(e) => handleAcknowledge(t._id, e)}
                             >
                               <CheckSquare size={14} /> Acknowledge Ticket
                             </div>
-                          )}
+                          )} */}
                           
 
                           {['admin', 'support_agent'].includes(user?.role) &&

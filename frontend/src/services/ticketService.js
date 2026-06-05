@@ -30,7 +30,7 @@ export const ticketService = {
   getAgentPerformance: () => api.get('/analytics/agent-performance'),
   autoAssign: (id) => api.patch(`/tickets/${id}/auto-assign`),
 
-  acknowledge: (id) => api.post(`/tickets/${id}/acknowledge`)
+  acknowledge: (id, data) => api.post(`/tickets/${id}/acknowledge`, data)
 };
 
 export const emailService = {

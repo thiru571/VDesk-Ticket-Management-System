@@ -50,9 +50,18 @@ router.post('/:id/confirm-arrival', protect, confirmArrival);
 router.post(
   '/:id/acknowledge',
   protect,
-  authorize('admin'),
+  authorize('admin', 'support_agent'),
   acknowledgeTicket
 );
+
+
+router.patch('/:id/acknowledge', (req, res, next) => {
+  console.log('ACK ROUTE HIT');
+  next();
+}, acknowledgeTicket);
+
+
+
 
 // Hold Request Routes
 router.post('/:id/request-hold', protect, authorize('support_agent', 'admin'), requestHold);
