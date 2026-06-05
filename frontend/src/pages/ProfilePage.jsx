@@ -774,7 +774,7 @@ export default function ProfilePage() {
                 borderTop: "1px solid var(--border-light)",
               }}
             >
-              <button
+              {/* <button
                 onClick={logout}
                 className="premium-nav-item"
                 style={{
@@ -785,7 +785,7 @@ export default function ProfilePage() {
               >
                 <LogOut size={18} />
                 <span>Sign Out</span>
-              </button>
+              </button> */}
             </div>
           </div>
 
