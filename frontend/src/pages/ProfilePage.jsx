@@ -62,7 +62,6 @@ function AvatarUploadMenu({
 
   return ReactDOM.createPortal(
     <motion.div
-      // FIX 3: data attribute so outside-click handler can detect portal clicks
       data-avatar-menu="true"
       initial={{ opacity: 0, scale: 0.92, y: -6 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -169,6 +168,7 @@ function CameraModal({ onCapture, onClose }) {
     setCaptured(null);
     startCamera();
   };
+
   const handleUse = () => {
     onCapture(captured);
     onClose();
@@ -366,13 +366,10 @@ export default function ProfilePage() {
   const cameraButtonRef = useRef(null);
   const avatarMenuRef = useRef(null);
 
-  // FIX 3: Close dropdown on outside click — but ignore clicks inside the portal menu
+  // Close dropdown on outside click — but ignore clicks inside the portal menu
   useEffect(() => {
     const handler = (e) => {
-      // Portal menu is outside avatarMenuRef (it's in document.body),
-      // so explicitly ignore mousedown events that land inside it.
       if (e.target.closest("[data-avatar-menu]")) return;
-
       if (
         avatarMenuRef.current &&
         !avatarMenuRef.current.contains(e.target) &&
@@ -382,7 +379,6 @@ export default function ProfilePage() {
         setShowAvatarMenu(false);
       }
     };
-
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
@@ -409,12 +405,10 @@ export default function ProfilePage() {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image");
       return;
     }
-
     const reader = new FileReader();
     reader.onload = async (event) => {
       const dataUrl = event.target.result;
@@ -474,7 +468,7 @@ export default function ProfilePage() {
   };
 
   const handleChangePassword = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (passwords.newPassword !== passwords.confirmPassword)
       return toast.error("Passwords do not match");
     setLoading(true);
@@ -484,16 +478,19 @@ export default function ProfilePage() {
         newPassword: passwords.newPassword,
       });
       toast.success("Password changed successfully");
-      setPasswords({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
       toast.error(err.response?.data?.message || "Password change failed");
     } finally {
       setLoading(false);
     }
+  };
+
+  // ── Forgot Password handler — defined outside any form ───────────────────
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate("/forgot-password");
   };
 
   return (
@@ -568,11 +565,7 @@ export default function ProfilePage() {
                     <img
                       src={avatarUrl}
                       alt="Profile"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (
                     getInitials(user?.name)
@@ -611,13 +604,10 @@ export default function ProfilePage() {
                     anchorRef={cameraButtonRef}
                     hasAvatar={!!avatarUrl}
                     onUpload={() => {
-                      // FIX 1: Defer click until after the menu's exit animation completes,
-                      // so the file dialog isn't swallowed mid-unmount.
                       setShowAvatarMenu(false);
                       setTimeout(() => fileInputRef.current?.click(), 150);
                     }}
                     onCamera={() => {
-                      // FIX 2: Same deferral for the camera modal.
                       setShowAvatarMenu(false);
                       setTimeout(() => setShowCameraModal(true), 150);
                     }}
@@ -652,9 +642,7 @@ export default function ProfilePage() {
                   <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>
                     {user?.stats?.totalRaised || 0}
                   </span>
-                  <span
-                    style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}
-                  >
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
                     Tickets Raised
                   </span>
                 </div>
@@ -662,9 +650,7 @@ export default function ProfilePage() {
                   <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>
                     {user?.stats?.totalResolved || 0}
                   </span>
-                  <span
-                    style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}
-                  >
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
                     Resolved
                   </span>
                 </div>
@@ -724,6 +710,7 @@ export default function ProfilePage() {
           {/* Content */}
           <div className="flex-col gap-8">
             <AnimatePresence mode="wait">
+
               {/* ── General Info ── */}
               {activeTab === "profile" && (
                 <motion.div
@@ -736,10 +723,7 @@ export default function ProfilePage() {
                     title="Personal Information"
                     subtitle="Update your basic profile details here."
                   >
-                    <form
-                      onSubmit={handleUpdateProfile}
-                      className="flex-col gap-6"
-                    >
+                    <form onSubmit={handleUpdateProfile} className="flex-col gap-6">
                       <div className="form-grid-2">
                         <Input
                           label="Full Name"
@@ -752,10 +736,7 @@ export default function ProfilePage() {
                           label="Designation"
                           value={profile.designation}
                           onChange={(e) =>
-                            setProfile({
-                              ...profile,
-                              designation: e.target.value,
-                            })
+                            setProfile({ ...profile, designation: e.target.value })
                           }
                         />
                         <Input
@@ -766,17 +747,12 @@ export default function ProfilePage() {
                           }
                         />
                         <div className="input-group">
-                          <label className="input-label">
-                            Preferred Contact
-                          </label>
+                          <label className="input-label">Preferred Contact</label>
                           <select
                             className="input"
                             value={profile.preferredContact}
                             onChange={(e) =>
-                              setProfile({
-                                ...profile,
-                                preferredContact: e.target.value,
-                              })
+                              setProfile({ ...profile, preferredContact: e.target.value })
                             }
                           >
                             <option value="email">Email Address</option>
@@ -792,12 +768,7 @@ export default function ProfilePage() {
                           paddingTop: "var(--s-6)",
                         }}
                       >
-                        <h4
-                          style={{
-                            marginBottom: "var(--s-4)",
-                            fontSize: "0.9rem",
-                          }}
-                        >
+                        <h4 style={{ marginBottom: "var(--s-4)", fontSize: "0.9rem" }}>
                           Work Location
                         </h4>
                         <div className="form-grid-3">
@@ -807,10 +778,7 @@ export default function ProfilePage() {
                             onChange={(e) =>
                               setProfile({
                                 ...profile,
-                                location: {
-                                  ...profile.location,
-                                  floor: e.target.value,
-                                },
+                                location: { ...profile.location, floor: e.target.value },
                               })
                             }
                           />
@@ -820,10 +788,7 @@ export default function ProfilePage() {
                             onChange={(e) =>
                               setProfile({
                                 ...profile,
-                                location: {
-                                  ...profile.location,
-                                  branch: e.target.value,
-                                },
+                                location: { ...profile.location, branch: e.target.value },
                               })
                             }
                           />
@@ -833,10 +798,7 @@ export default function ProfilePage() {
                             onChange={(e) =>
                               setProfile({
                                 ...profile,
-                                location: {
-                                  ...profile.location,
-                                  city: e.target.value,
-                                },
+                                location: { ...profile.location, city: e.target.value },
                               })
                             }
                           />
@@ -845,10 +807,7 @@ export default function ProfilePage() {
 
                       <div
                         className="flex-center"
-                        style={{
-                          justifyContent: "flex-end",
-                          marginTop: "var(--s-4)",
-                        }}
+                        style={{ justifyContent: "flex-end", marginTop: "var(--s-4)" }}
                       >
                         <Button type="submit" isLoading={loading}>
                           Save Updates
@@ -871,32 +830,17 @@ export default function ProfilePage() {
                     title="Security Settings"
                     subtitle="Keep your account secure with a strong password."
                   >
-                    <form
-                      onSubmit={handleChangePassword}
-                      className="flex-col gap-6"
-                    >
+                    {/* Inputs only — buttons live outside the form below */}
+                    <form className="flex-col gap-6">
                       <Input
                         type="password"
                         label="Current Password"
                         placeholder="••••••••"
                         value={passwords.currentPassword}
                         onChange={(e) =>
-                          setPasswords({
-                            ...passwords,
-                            currentPassword: e.target.value,
-                          })
+                          setPasswords({ ...passwords, currentPassword: e.target.value })
                         }
                       />
-
-                      {/* <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => navigate("/forgot-password")}
-                          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          Forgot Password?
-                        </button>
-                      </div> */}
                       <div className="form-grid-2">
                         <Input
                           type="password"
@@ -904,10 +848,7 @@ export default function ProfilePage() {
                           placeholder="••••••••"
                           value={passwords.newPassword}
                           onChange={(e) =>
-                            setPasswords({
-                              ...passwords,
-                              newPassword: e.target.value,
-                            })
+                            setPasswords({ ...passwords, newPassword: e.target.value })
                           }
                         />
                         <Input
@@ -916,42 +857,41 @@ export default function ProfilePage() {
                           placeholder="••••••••"
                           value={passwords.confirmPassword}
                           onChange={(e) =>
-                            setPasswords({
-                              ...passwords,
-                              confirmPassword: e.target.value,
-                            })
+                            setPasswords({ ...passwords, confirmPassword: e.target.value })
                           }
                         />
                       </div>
 
-                      <div
-                        className="flex-center"
-                        style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          gap: "16px",
-                          marginTop: "24px",
-                        }}
-                      >
-                        <Button
-  type="button"
-  variant="outline"
-  leftIcon={<Key size={18} />}
-  onClick={() => navigate("/forgot-password")}
->
-  Forgot Password
-</Button>
-
-                        <Button
-                          type="submit"
-                          isLoading={loading}
-                          leftIcon={<Key size={18} />}
-                        >
-                          Update Password
-                        </Button>
-                      </div>
+                      {/* Spacer inside form to preserve gap layout — no button here */}
                     </form>
+
+                    {/* ✅ Both buttons outside the form, side by side */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        alignItems: "center",
+                        gap: "12px",
+                        marginTop: "var(--s-4)",
+                      }}
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        leftIcon={<Key size={18} />}
+                        onClick={handleForgotPassword}
+                      >
+                        Forgot Password
+                      </Button>
+                      <Button
+                        type="button"
+                        isLoading={loading}
+                        leftIcon={<Key size={18} />}
+                        onClick={handleChangePassword}
+                      >
+                        Update Password
+                      </Button>
+                    </div>
                   </Card>
 
                   <Card
@@ -971,6 +911,7 @@ export default function ProfilePage() {
                         </p>
                       </div>
                       <Button
+                        type="button"
                         variant="danger"
                         size="sm"
                         onClick={() => {
@@ -1038,20 +979,10 @@ export default function ProfilePage() {
                           }}
                         >
                           <div className="flex-col">
-                            <span
-                              style={{
-                                fontWeight: 800,
-                                color: "var(--text-main)",
-                              }}
-                            >
+                            <span style={{ fontWeight: 800, color: "var(--text-main)" }}>
                               {pref.label}
                             </span>
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "var(--text-dim)",
-                              }}
-                            >
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
                               {pref.desc}
                             </span>
                           </div>
@@ -1059,8 +990,7 @@ export default function ProfilePage() {
                             onClick={async () => {
                               const newPrefs = {
                                 ...user.notificationPreferences,
-                                [pref.id]:
-                                  !user.notificationPreferences?.[pref.id],
+                                [pref.id]: !user.notificationPreferences?.[pref.id],
                               };
                               try {
                                 const res = await userService.updateProfile({
@@ -1075,18 +1005,14 @@ export default function ProfilePage() {
                             style={{
                               width: "44px",
                               height: "24px",
-                              background: user.notificationPreferences?.[
-                                pref.id
-                              ]
+                              background: user.notificationPreferences?.[pref.id]
                                 ? "var(--primary)"
                                 : "var(--border)",
                               borderRadius: "20px",
                               padding: "4px",
                               cursor: "pointer",
                               display: "flex",
-                              justifyContent: user.notificationPreferences?.[
-                                pref.id
-                              ]
+                              justifyContent: user.notificationPreferences?.[pref.id]
                                 ? "flex-end"
                                 : "flex-start",
                               transition: "all 0.2s ease",
@@ -1109,6 +1035,7 @@ export default function ProfilePage() {
                   </Card>
                 </motion.div>
               )}
+
             </AnimatePresence>
           </div>
         </div>

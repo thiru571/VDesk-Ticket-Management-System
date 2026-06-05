@@ -88,7 +88,50 @@ const sendOtpEmail = async ({ to, otp }) => {
   console.log(`📧 OTP email sent to ${to}`);
 };
 
-// ─── 2. Ticket Confirmation ───────────────────────────────────────────────────
+// ─── 2. Password Reset Email ──────────────────────────────────────────────────
+const sendPasswordResetEmail = async ({ to, resetUrl }) => {
+  const transport = getTransporter(); // ✅ use getTransporter(), not raw transporter
+  await transport.sendMail({
+    from: FROM_VDESK(),
+    to,
+    subject: 'Reset your VDesk password',
+    html: `
+      <div style="font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;max-width:500px;margin:0 auto;background:#f4f7f9;padding:40px 20px;">
+        <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,.05);border:1px solid #e1e8ed;">
+          <div style="background:#1E40AF;padding:30px;text-align:center;">
+            <h1 style="color:#fff;margin:0;font-size:24px;font-weight:800;letter-spacing:1px;">VDesk</h1>
+            <p style="color:#bfdbfe;margin:10px 0 0;font-size:14px;">Technical Support Portal</p>
+          </div>
+          <div style="padding:40px 30px;">
+            <h2 style="color:#111827;margin:0 0 16px;font-size:20px;font-weight:700;text-align:center;">Reset Your Password</h2>
+            <p style="color:#4b5563;margin:0 0 32px;font-size:16px;line-height:1.6;text-align:center;">
+              You requested a password reset. Click the button below to set a new password. This link is valid for <strong>1 hour</strong>.
+            </p>
+            <div style="text-align:center;margin-bottom:32px;">
+              <a href="${resetUrl}" style="background:#1E40AF;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block;">
+                Reset Password
+              </a>
+            </div>
+            <p style="color:#6b7280;font-size:13px;text-align:center;word-break:break-all;">
+              Or copy this link: <a href="${resetUrl}" style="color:#1E40AF;">${resetUrl}</a>
+            </p>
+            <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:16px;border-radius:4px;margin-top:24px;">
+              <p style="color:#92400e;margin:0;font-size:13px;line-height:1.5;">
+                <strong>Security Tip:</strong> If you didn't request this, ignore this email. Your password won't change.
+              </p>
+            </div>
+          </div>
+          <div style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #f3f4f6;">
+            <p style="color:#6b7280;margin:0;font-size:12px;">© ${new Date().getFullYear()} VDart Inc. Technical Support Division</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+  console.log(`📧 Password reset email sent to ${to}`);
+};
+
+// ─── 3. Ticket Confirmation ───────────────────────────────────────────────────
 const sendTicketConfirmation = async ({ to, name, ticket }) => {
   try {
     const transport = getTransporter();
@@ -130,7 +173,7 @@ const sendTicketConfirmation = async ({ to, name, ticket }) => {
   }
 };
 
-// ─── 3. Acknowledgement Email ─────────────────────────────────────────────────
+// ─── 4. Acknowledgement Email ─────────────────────────────────────────────────
 const sendAckEmail = async ({ to, name, ticket }) => {
   try {
     const transport = getTransporter();
@@ -162,7 +205,7 @@ const sendAckEmail = async ({ to, name, ticket }) => {
   }
 };
 
-// ─── 4. Resolve Email ─────────────────────────────────────────────────────────
+// ─── 5. Resolve Email ─────────────────────────────────────────────────────────
 const sendResolveEmail = async ({ to, name, ticket }) => {
   try {
     const transport = getTransporter();
@@ -195,7 +238,7 @@ const sendResolveEmail = async ({ to, name, ticket }) => {
   }
 };
 
-// ─── 5. Status Change Email (single unified function) ─────────────────────────
+// ─── 6. Status Change Email ───────────────────────────────────────────────────
 const sendStatusChangeEmail = async ({ to, name, ticket, newStatus }) => {
   try {
     const transport = getTransporter();
@@ -253,10 +296,9 @@ const sendStatusChangeEmail = async ({ to, name, ticket, newStatus }) => {
 };
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
-// NOTE: sendVerificationEmail, sendPasswordSetEmail, sendStatusUpdate removed —
-// they are dead code per v1.2 (no-registration flow, no-email onboarding).
 module.exports = {
   sendOtpEmail,
+  sendPasswordResetEmail,  // ✅ added
   sendTicketConfirmation,
   sendAckEmail,
   sendResolveEmail,

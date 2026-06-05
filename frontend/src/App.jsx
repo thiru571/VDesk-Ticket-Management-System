@@ -50,11 +50,13 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-    {/* Public */}
-    <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-    <Route path="/mobile-login" element={<PublicRoute><MobileLoginPage /></PublicRoute>} />
-    <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-    <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+   {/* Public */}
+<Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+<Route path="/mobile-login" element={<PublicRoute><MobileLoginPage /></PublicRoute>} />
+<Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+
+{/* ✅ Accessible by everyone — logged in or not */}
+<Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
     {/* Protected - App Layout */}
     <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

@@ -1,9 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const {
-  requestVerification, verifyEmail,
-  sendOtp, verifyOtp, login, getMe,
-  adminCreateUser, adminResetPassword,
+  requestVerification,
+  verifyEmail,
+  sendOtp,
+  verifyOtp,
+  login,
+  getMe,
+  adminCreateUser,
+  adminResetPassword,
+  forgotPassword,
   changePassword,
   UptadeProfile
 } = require('../controllers/auth.controller');
@@ -18,11 +24,14 @@ const otpLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+
+
 // Public
 router.post('/request-verification', requestVerification);
 router.get('/verify-email', verifyEmail);
 router.post('/send-otp', otpLimiter, sendOtp);
 router.post('/verify-otp', verifyOtp);
+router.post('/forgot-password', forgotPassword);
 router.post('/login', login); 
 router.put(
   '/change-password',

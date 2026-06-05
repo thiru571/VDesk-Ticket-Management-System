@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema({
   otpExpiry: { type: Date, select: false },
   otpAttempts: { type: Number, default: 0, select: false },
   otpLockedUntil: { type: Date, default: null, select: false },
+
+  // ── Password Reset ──────────────────────────────────────────────────────────
+  resetPasswordToken:  { type: String, select: false },
+  resetPasswordExpiry: { type: Date,   select: false },
+
   designation: { type: String, trim: true },
   employeeId: { type: String, unique: true, sparse: true },
   phone: { type: String, trim: true },
@@ -56,9 +61,9 @@ const userSchema = new mongoose.Schema({
   },
   // For support agents — which categories they handle
   expertise: [{ type: String, enum: ['IT', 'HR', 'Finance', 'Admin', 'Operations', 'Marketing', 'Sales', 'Legal', 'Engineering'] }],
-  currentWorkload: { type: Number, default: 0 }, // active assigned tickets
-  lastAssignedAt: { type: Date, default: null }, // for round-robin assignment
-  isActive: { type: Boolean, default: false }, // inactive until admin activates
+  currentWorkload: { type: Number, default: 0 },
+  lastAssignedAt: { type: Date, default: null },
+  isActive: { type: Boolean, default: false },
   lastLogin: { type: Date },
   notificationPreferences: {
     email: { type: Boolean, default: true },
@@ -70,7 +75,7 @@ const userSchema = new mongoose.Schema({
   stats: {
     totalRaised: { type: Number, default: 0 },
     totalResolved: { type: Number, default: 0 },
-    avgResolutionTime: { type: Number, default: 0 } // in hours
+    avgResolutionTime: { type: Number, default: 0 }
   },
   // Real-time Status System
   liveStatus: {
@@ -107,12 +112,9 @@ userSchema.virtual('fullLocation').get(function () {
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1, department: 1 });
 
-// Relocated from fix-agents.js: Ensure baseline expertise for IT admins and normalized workload
-userSchema.pre('save', function(next) {
-  // Normalize workload
+// Normalize workload and ensure IT admin expertise
+userSchema.pre('save', function (next) {
   if (this.currentWorkload < 0) this.currentWorkload = 0;
-
-  // Ensure IT admins have matching expertise by default
   if (this.role === 'admin' && this.department === 'IT' && (!this.expertise || this.expertise.length === 0)) {
     this.expertise = ['IT'];
   }

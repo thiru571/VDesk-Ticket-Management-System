@@ -10,7 +10,8 @@ const {
   sendVerificationEmail,
   sendPasswordSetEmail,
   sendStatusChangeEmail,
-  sendOtpEmail
+  sendOtpEmail,
+  sendPasswordResetEmail,  
 } = require('../services/email.service');
 
 const generateToken = (user) => {
@@ -293,6 +294,106 @@ const adminResetPassword = async (req, res, next) => {
   }
 };
 
+
+//-----------------Forget Password & Change Password-----------------
+
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({
+      email: email.toLowerCase().trim()
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Save hashed token
+    user.resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    user.resetPasswordExpiry = Date.now() + 60 * 60 * 1000;
+
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset URL
+    const resetUrl =
+      `${process.env.FRONTEND_URL || 'http://localhost:5174'}/reset-password/${resetToken}`;
+
+    // 👇 PASTE HERE
+    console.log('🔗 Password Reset URL:', resetUrl);
+
+    // Send email
+    await sendPasswordResetEmail({
+      to: user.email,
+      resetUrl
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset email sent successfully'
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+//--------------Forget Password & Change Password-----------------
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpiry: { $gt: Date.now() }
+    }).select('+resetPasswordToken +resetPasswordExpiry');
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    const { password } = req.body;
+
+    if (!password || password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters'
+      });
+    }
+
+    user.password = password;
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successful'
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
 const changePassword = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -376,5 +477,7 @@ module.exports = {
   adminCreateUser,
   adminResetPassword,
   changePassword,
-  UptadeProfile
+  UptadeProfile,
+  forgotPassword,
+  resetPassword
 };
