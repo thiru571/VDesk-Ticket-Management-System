@@ -521,147 +521,228 @@ export default function ProfilePage() {
         className="page-layout"
       >
         {/* ── Profile Header Card ── */}
-        <Card
+        {/* ── Modern Profile Header ── */}
+<Card
+  style={{
+    marginBottom: "var(--s-8)",
+    borderRadius: "18px",
+    padding: 0,
+    overflow: "hidden",
+    background: "#fff",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "24px 32px",
+      gap: "24px",
+      flexWrap: "wrap",
+    }}
+  >
+    {/* Avatar Section */}
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "18px",
+      }}
+    >
+      <div
+        ref={avatarMenuRef}
+        style={{
+          position: "relative",
+        }}
+      >
+        <div
           style={{
-            marginBottom: "var(--s-8)",
-            background: "linear-gradient(to right, #F8FAFC, #FFFFFF)",
+            width: "72px",
+            height: "72px",
+            borderRadius: "50%",
+            border: "2px solid #4F7CFF",
+            overflow: "hidden",
+            background: avatarUrl
+              ? "transparent"
+              : getAvatarColor(user?.name),
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            fontSize: "1.2rem",
           }}
         >
-          <div className="flex-center gap-8" style={{ padding: "var(--s-4)" }}>
-            {/* Avatar */}
-            <div
-              ref={avatarMenuRef}
-              style={{ position: "relative", flexShrink: 0 }}
-            >
-              {/* Gradient ring */}
-              <div
-                style={{
-                  padding: "3px",
-                  borderRadius: "50%",
-                  background: avatarUrl
-                    ? "linear-gradient(135deg, var(--primary) 0%, #a78bfa 50%, #38bdf8 100%)"
-                    : "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
-                  boxShadow: avatarUrl
-                    ? "0 0 0 2px white, 0 4px 16px rgba(99,102,241,0.25)"
-                    : "0 0 0 2px white",
-                  transition: "background 0.4s",
-                }}
-              >
-                <div
-                  className="flex-center"
-                  style={{
-                    width: "96px",
-                    height: "96px",
-                    background: avatarUrl
-                      ? "transparent"
-                      : getAvatarColor(user?.name),
-                    borderRadius: "50%",
-                    overflow: "hidden",
-                    color: "white",
-                    fontSize: "2.2rem",
-                    fontWeight: 800,
-                  }}
-                >
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="Profile"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : (
-                    getInitials(user?.name)
-                  )}
-                </div>
-              </div>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="Profile"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            getInitials(user?.name)
+          )}
+        </div>
 
-              {/* Camera button */}
-              <button
-                ref={cameraButtonRef}
-                className="flex-center"
-                onClick={() => setShowAvatarMenu((v) => !v)}
-                style={{
-                  position: "absolute",
-                  bottom: "2px",
-                  right: "2px",
-                  width: "30px",
-                  height: "30px",
-                  background: showAvatarMenu ? "var(--primary)" : "white",
-                  color: showAvatarMenu ? "white" : "var(--text-muted)",
-                  borderRadius: "50%",
-                  border: "2px solid white",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                  zIndex: 1,
-                }}
-              >
-                <Camera size={15} />
-              </button>
+        {/* Camera Button */}
+        <button
+          ref={cameraButtonRef}
+          onClick={() => setShowAvatarMenu((v) => !v)}
+          style={{
+            position: "absolute",
+            bottom: "-2px",
+            right: "-2px",
+            width: "24px",
+            height: "24px",
+            borderRadius: "50%",
+            border: "2px solid white",
+            background: "#4F46E5",
+            color: "#fff",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Camera size={12} />
+        </button>
 
-              {/* Portal dropdown */}
-              <AnimatePresence>
-                {showAvatarMenu && (
-                  <AvatarUploadMenu
-                    anchorRef={cameraButtonRef}
-                    hasAvatar={!!avatarUrl}
-                    onUpload={() => {
-                      setShowAvatarMenu(false);
-                      setTimeout(() => fileInputRef.current?.click(), 150);
-                    }}
-                    onCamera={() => {
-                      setShowAvatarMenu(false);
-                      setTimeout(() => setShowCameraModal(true), 150);
-                    }}
-                    onRemove={handleRemoveAvatar}
-                    onClose={() => setShowAvatarMenu(false)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
+        <AnimatePresence>
+          {showAvatarMenu && (
+            <AvatarUploadMenu
+              anchorRef={cameraButtonRef}
+              hasAvatar={!!avatarUrl}
+              onUpload={() => {
+                setShowAvatarMenu(false);
+                setTimeout(() => fileInputRef.current?.click(), 150);
+              }}
+              onCamera={() => {
+                setShowAvatarMenu(false);
+                setTimeout(() => setShowCameraModal(true), 150);
+              }}
+              onRemove={handleRemoveAvatar}
+            />
+          )}
+        </AnimatePresence>
+      </div>
 
-            {/* User info */}
-            <div className="flex-1">
-              <div className="flex-center gap-3 mb-1">
-                <h1 style={{ fontSize: "1.75rem", fontWeight: 800 }}>
-                  {user?.name}
-                </h1>
-                <Badge variant="primary">{user?.role?.replace("_", " ")}</Badge>
-              </div>
-              <p
-                style={{
-                  color: "var(--text-dim)",
-                  marginBottom: "var(--s-4)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <Mail size={16} /> {user?.email}
-              </p>
-              <div className="flex-center gap-6">
-                <div className="flex-center gap-2">
-                  <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-                    {user?.stats?.totalRaised || 0}
-                  </span>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
-                    Tickets Raised
-                  </span>
-                </div>
-                <div className="flex-center gap-2">
-                  <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-                    {user?.stats?.totalResolved || 0}
-                  </span>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>
-                    Resolved
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* User Details */}
+      <div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            marginBottom: "4px",
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "1.5rem",
+              fontWeight: 700,
+              color: "#111827",
+            }}
+          >
+            {user?.name}
+          </h2>
 
-            <Button variant="outline">View Public Profile</Button>
-          </div>
-        </Card>
+          <Badge
+            style={{
+              background: "#EEF2FF",
+              color: "#4F46E5",
+              fontSize: "10px",
+              padding: "4px 8px",
+              borderRadius: "999px",
+            }}
+          >
+            {user?.role?.toUpperCase()}
+          </Badge>
+        </div>
 
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            color: "#6B7280",
+            fontSize: "0.9rem",
+          }}
+        >
+          <Mail size={14} />
+          {user?.email}
+        </div>
+      </div>
+    </div>
+
+    {/* Stats */}
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "40px",
+      }}
+    >
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: "1.2rem",
+          }}
+        >
+          {user?.stats?.totalRaised || 0}
+        </div>
+
+        <div
+          style={{
+            fontSize: "0.7rem",
+            color: "#9CA3AF",
+            textTransform: "uppercase",
+          }}
+        >
+          Raised
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: "1.2rem",
+          }}
+        >
+          {user?.stats?.totalResolved || 0}
+        </div>
+
+        <div
+          style={{
+            fontSize: "0.7rem",
+            color: "#9CA3AF",
+            textTransform: "uppercase",
+          }}
+        >
+          Resolved
+        </div>
+      </div>
+    </div>
+
+    {/* View Profile Button */}
+    <Button
+      variant="outline"
+      style={{
+        borderRadius: "10px",
+        minWidth: "140px",
+      }}
+    >
+      View Profile →
+    </Button>
+  </div>
+</Card>
         {/* ── Body ── */}
         <div
           style={{
