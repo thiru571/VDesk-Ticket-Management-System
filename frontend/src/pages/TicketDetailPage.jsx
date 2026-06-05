@@ -45,8 +45,6 @@ const STATUS_COLOR = {
   reopened: 'warning',
 };
 
-// ── Inline sub-components ──────────────────────────────────────────────────
-
 function InfoRow({ icon, label, value, editing, editNode }) {
   return (
     <div style={{
@@ -67,8 +65,6 @@ function ActivityDot({ color }) {
   const colors = { green: '#16A34A', blue: '#2563EB', amber: '#D97706', red: '#DC2626', gray: '#94A3B8' };
   return <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: colors[color] || colors.gray, flexShrink: 0, marginTop: '5px' }} />;
 }
-
-// ── Main component ─────────────────────────────────────────────────────────
 
 export default function TicketDetailPage() {
   const { id } = useParams();
@@ -106,6 +102,8 @@ export default function TicketDetailPage() {
   const [ackSent, setAckSent] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [ackTimer, setAckTimer] = useState(null);
+  const [ackMessage, setAckMessage] = useState('');
+  const [isAckModalOpen, setIsAckModalOpen] = useState(false);
 
   // resolution
   const [isResolutionModalOpen, setIsResolutionModalOpen] = useState(false);
@@ -133,8 +131,6 @@ export default function TicketDetailPage() {
 
   const timerRef = useRef(null);
   const isAssignedAgent = isAgent && ticket?.assignedTo?._id === user?._id;
-
-  // ── Data fetching ──────────────────────────────────────────────────────
 
   useEffect(() => {
     fetchAllData();
@@ -310,14 +306,26 @@ export default function TicketDetailPage() {
     finally { setSubmittingFeedback(false); }
   };
 
+  // ✅ NEW: Acknowledge with optional message
+  const handleAcknowledge = async () => {
+    try {
+      await ticketService.acknowledge(ticket._id, { message: ackMessage.trim() || null });
+      toast.success('Ticket acknowledged');
+      setAckSent(true);
+      setIsAckModalOpen(false);
+      setAckMessage('');
+      fetchAllData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to acknowledge');
+    }
+  };
+
   const formatTime = (secs) => {
     if (secs === null) return '--:--';
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = (secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
-
-  // ── Loading skeleton ───────────────────────────────────────────────────
 
   if (loading) return (
     <div className="page-layout animate-pulse" style={{ padding: '40px' }}>
@@ -341,7 +349,6 @@ export default function TicketDetailPage() {
   const isTicketOpen = !['resolved', 'closed'].includes(ticket.status);
   const ackOverdue = ackTimer === 0 && !ackSent;
 
-  // Employee journey steps
   const STATUS_PROGRESS = [
     { value: 'open',        label: 'Received',      icon: <Mail size={15} /> },
     { value: 'assigned',    label: 'Assigned',       icon: <UserCheck size={15} /> },
@@ -354,8 +361,6 @@ export default function TicketDetailPage() {
   const currentStep = STATUS_PROGRESS.findIndex(s => s.value === currentStatus);
 
   const pColor = PRIORITY_COLOR[ticket.priority] || PRIORITY_COLOR.medium;
-
-  // ── Render ─────────────────────────────────────────────────────────────
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-layout">
@@ -408,7 +413,6 @@ export default function TicketDetailPage() {
               {ticket.status.replace(/_/g, ' ')}
             </span>
           </div>
-
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {STATUS_PROGRESS.map((s, i) => {
               const isCompleted = i < currentStep;
@@ -458,35 +462,50 @@ export default function TicketDetailPage() {
               {ticket.status.replace(/_/g, ' ')}
             </Badge>
           </div>
+
+          {/* ✅ UPDATED: Acknowledge gates all other buttons */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {ticket.status !== 'in_progress' && (
+            {!ticket.firstResponseAt && ['open', 'assigned'].includes(ticket.status) && (
               <button
-                onClick={() => handleStatusChange('in_progress')}
-                disabled={updatingStatus}
-                style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #93C5FD', background: '#EFF6FF', color: '#1D4ED8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={() => setIsAckModalOpen(true)}
+                style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #6EE7B7', background: '#ECFDF5', color: '#065F46', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <Hammer size={14} /> Mark as working on it
+                <BadgeCheck size={14} /> Acknowledge ticket
               </button>
             )}
-            {(isAdmin || isAssignedAgent) && (
+            {ticket.firstResponseAt && (
               <>
-                <button
-                  onClick={() => setIsHoldModalOpen(true)}
-                  disabled={['resolved', 'closed', 'on_hold', 'pending_hold'].includes(ticket.status)}
-                  style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #FCD34D', background: '#FFFBEB', color: '#92400E', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: ['resolved', 'closed', 'on_hold', 'pending_hold'].includes(ticket.status) ? 0.5 : 1 }}
-                >
-                  <Lock size={14} /> Put on hold
-                </button>
-                <button
-                  onClick={() => setIsResolutionModalOpen(true)}
-                  disabled={['resolved', 'closed', 'on_hold'].includes(ticket.status)}
-                  style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #6EE7B7', background: '#ECFDF5', color: '#065F46', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: ['resolved', 'closed', 'on_hold'].includes(ticket.status) ? 0.5 : 1 }}
-                >
-                  <CheckCircle2 size={14} /> Resolve ticket
-                </button>
+                {ticket.status !== 'in_progress' && (
+                  <button
+                    onClick={() => handleStatusChange('in_progress')}
+                    disabled={updatingStatus}
+                    style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #93C5FD', background: '#EFF6FF', color: '#1D4ED8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Hammer size={14} /> Mark as working on it
+                  </button>
+                )}
+                {(isAdmin || isAssignedAgent) && (
+                  <>
+                    <button
+                      onClick={() => setIsHoldModalOpen(true)}
+                      disabled={['resolved', 'closed', 'on_hold', 'pending_hold'].includes(ticket.status)}
+                      style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #FCD34D', background: '#FFFBEB', color: '#92400E', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: ['resolved', 'closed', 'on_hold', 'pending_hold'].includes(ticket.status) ? 0.5 : 1 }}
+                    >
+                      <Lock size={14} /> Put on hold
+                    </button>
+                    <button
+                      onClick={() => setIsResolutionModalOpen(true)}
+                      disabled={['resolved', 'closed', 'on_hold'].includes(ticket.status)}
+                      style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #6EE7B7', background: '#ECFDF5', color: '#065F46', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: ['resolved', 'closed', 'on_hold'].includes(ticket.status) ? 0.5 : 1 }}
+                    >
+                      <CheckCircle2 size={14} /> Resolve ticket
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
+
           <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Clock size={12} /> Live for {timeAgo(ticket.updatedAt)}
           </div>
@@ -792,17 +811,12 @@ export default function TicketDetailPage() {
               <Shield size={13} /> Ticket properties
             </div>
 
-            <InfoRow
-              icon={<Activity size={12} />} label="Status"
-              value={null}
-              editNode={null}
-            >
+            <InfoRow icon={<Activity size={12} />} label="Status" value={null} editNode={null}>
               <Badge variant={STATUS_COLOR[ticket.status] || 'warning'} style={{ fontSize: '0.7rem' }}>
                 {ticket.status.replace(/_/g, ' ')}
               </Badge>
             </InfoRow>
 
-            {/* Priority */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--border-light)' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                 <ShieldCheck size={12} /> Priority
@@ -818,7 +832,6 @@ export default function TicketDetailPage() {
               )}
             </div>
 
-            {/* Category */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--border-light)' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                 <Briefcase size={12} /> Category
@@ -832,7 +845,6 @@ export default function TicketDetailPage() {
               )}
             </div>
 
-            {/* Sub-category */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--border-light)' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                 <Layers size={12} /> Sub-category
@@ -847,7 +859,6 @@ export default function TicketDetailPage() {
               )}
             </div>
 
-            {/* Location */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--border-light)' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                 <MapPin size={12} /> Location
@@ -861,7 +872,6 @@ export default function TicketDetailPage() {
               )}
             </div>
 
-            {/* Shift */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--border-light)' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                 <Clock size={12} /> Shift
@@ -875,7 +885,6 @@ export default function TicketDetailPage() {
               )}
             </div>
 
-            {/* Ticket type */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                 <RefreshCw size={12} /> Type
@@ -994,10 +1003,8 @@ export default function TicketDetailPage() {
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '500px', padding: '28px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.2)' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '6px' }}>Mark as resolved</h2>
               <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginBottom: '20px' }}>Provide a summary of what was done for the accountability record.</p>
-
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '8px', textTransform: 'uppercase' }}>Resolution summary (required)</label>
               <textarea className="input" style={{ height: '110px', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} placeholder="e.g. Replaced cable, reconfigured switch..." value={resNotes} onChange={e => setResNotes(e.target.value)} />
-
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '10px', textTransform: 'uppercase' }}>Resolution type</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '24px' }}>
                 {[
@@ -1012,7 +1019,6 @@ export default function TicketDetailPage() {
                   </div>
                 ))}
               </div>
-
               <div style={{ display: 'flex', gap: '10px' }}>
                 <Button variant="ghost" fullWidth onClick={() => setIsResolutionModalOpen(false)}>Cancel</Button>
                 <Button fullWidth onClick={async () => {
@@ -1062,6 +1068,34 @@ export default function TicketDetailPage() {
                 <Button variant="ghost" fullWidth onClick={() => setIsHoldApproveModalOpen(false)}>Close</Button>
                 <Button variant="danger" fullWidth onClick={handleRejectHold}>Reject</Button>
                 <Button variant="success" fullWidth onClick={handleApproveHold}>Approve hold</Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ✅ NEW: Acknowledge modal */}
+        {isAckModalOpen && (
+          <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '440px', padding: '28px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '6px' }}>Acknowledge ticket</h2>
+              <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginBottom: '18px' }}>
+                Optionally send a message to the employee letting them know you've picked this up.
+              </p>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Message <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span>
+              </label>
+              <textarea
+                className="input"
+                style={{ height: '100px', padding: '12px', borderRadius: '12px', marginBottom: '24px' }}
+                placeholder="e.g. Hi, I've received your request and will look into it shortly..."
+                value={ackMessage}
+                onChange={e => setAckMessage(e.target.value)}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Button variant="ghost" fullWidth onClick={() => { setIsAckModalOpen(false); setAckMessage(''); }}>Cancel</Button>
+                <Button fullWidth onClick={handleAcknowledge} leftIcon={<BadgeCheck size={15} />}>
+                  {ackMessage.trim() ? 'Acknowledge & send' : 'Acknowledge'}
+                </Button>
               </div>
             </motion.div>
           </div>

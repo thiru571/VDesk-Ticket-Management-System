@@ -16,6 +16,7 @@ const { sendInAppMessage } = require('../services/message.service'); // Assuming
 const { emitToUser, emitToRole, emitToTicket } = require('../config/socket');
 const { getSystemStatusAverages } = require('../services/analytics.service');
 
+
 // @desc    Create ticket
 // @route   POST /api/tickets
 // @access  Private
@@ -1850,6 +1851,8 @@ const triggerAutoAssign = async (req, res, next) => {
 
 const acknowledgeTicket = async (req, res) => {
   try {
+    console.log("User:", req.user);
+
     const ticket = await Ticket.findById(req.params.id);
 
     if (!ticket) {
@@ -1858,7 +1861,6 @@ const acknowledgeTicket = async (req, res) => {
       });
     }
 
-    // First response timestamp (only once)
     if (!ticket.firstResponseAt) {
       ticket.firstResponseAt = new Date();
 
@@ -1866,30 +1868,30 @@ const acknowledgeTicket = async (req, res) => {
         ticket.sla.respondedAt = new Date();
       }
 
-      // Add acknowledgement comment only once
+      const { message } = req.body;
+
       await Comment.create({
         ticket: ticket._id,
         author: req.user._id,
-        content: 'We are working on your issue.',
-        isSystem: false
+        content: message?.trim() || 'We have received your request and are working on it.',
+        isSystem: true
       });
     }
 
-    // Change status
     ticket.status = 'in_progress';
 
     await ticket.save();
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Ticket acknowledged'
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('ACKNOWLEDGE ERROR:', error);
 
-    res.status(500).json({
-      message: 'Server Error'
+    return res.status(500).json({
+      message: error.message
     });
   }
 };

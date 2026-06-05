@@ -6,27 +6,45 @@ const commentSchema = new mongoose.Schema({
     ref: 'Ticket',
     required: true
   },
+
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
+
   content: {
     type: String,
     required: [true, 'Comment content is required'],
     maxlength: [2000, 'Comment cannot exceed 2000 characters']
   },
+
+  // System-generated comments
+  isSystem: {
+    type: Boolean,
+    default: false
+  },
+
+  // Internal notes (visible only to agents/admins)
+  isInternal: {
+    type: Boolean,
+    default: false
+  },
+
   // Threaded replies
   parentComment: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment',
     default: null
   },
-  // @mentions
+
+  // User mentions
   mentions: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+
+  // Attachments
   attachments: [{
     filename: String,
     originalName: String,
@@ -34,24 +52,37 @@ const commentSchema = new mongoose.Schema({
     size: Number,
     path: String
   }],
-  isInternal: { type: Boolean, default: false }, // Internal agent notes
-  isEdited: { type: Boolean, default: false },
+
+  // Edit tracking
+  isEdited: {
+    type: Boolean,
+    default: false
+  },
+
   editedAt: Date,
-  isDeleted: { type: Boolean, default: false }
+
+  // Soft delete
+  isDeleted: {
+    type: Boolean,
+    default: false
+  }
+
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-// Virtual: replies
+// Virtual replies
 commentSchema.virtual('replies', {
   ref: 'Comment',
   localField: '_id',
   foreignField: 'parentComment'
 });
 
+// Indexes
 commentSchema.index({ ticket: 1, createdAt: 1 });
 commentSchema.index({ parentComment: 1 });
+commentSchema.index({ author: 1 });
 
 module.exports = mongoose.model('Comment', commentSchema);

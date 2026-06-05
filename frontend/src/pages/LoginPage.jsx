@@ -507,6 +507,45 @@ export default function LoginPage() {
             </motion.div>
           )}
 
+
+
+
+        {/* {isAckModalOpen && (
+          <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '440px', padding: '28px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '6px' }}>Acknowledge ticket</h2>
+              <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginBottom: '18px' }}>
+                Optionally send a message to the employee letting them know you've picked this up.
+              </p>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Message <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span>
+              </label>
+              <textarea
+                className="input"
+                style={{ height: '100px', padding: '12px', borderRadius: '12px', marginBottom: '24px' }}
+                placeholder="e.g. Hi, I've received your request and will look into it shortly..."
+                value={ackMessage}
+                onChange={e => setAckMessage(e.target.value)}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Button variant="ghost" fullWidth onClick={() => { setIsAckModalOpen(false); setAckMessage(''); }}>Cancel</Button>
+                <Button fullWidth onClick={handleAcknowledge} leftIcon={<BadgeCheck size={15} />}>
+                  {ackMessage.trim() ? 'Acknowledge & send' : 'Acknowledge'}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )} */}
+
+
+
+
+
+
+
+
+
+
         </AnimatePresence>
       </div>
     </div>
