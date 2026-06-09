@@ -4,7 +4,7 @@ import {
   ArrowLeft, Clock, User, Shield, MessageSquare, Paperclip,
   CheckCircle2, History, RefreshCw, BadgeCheck, Mail, UserCheck,
   Hammer, Trophy, Plus, Activity, ShieldCheck, Briefcase, Send,
-  Lock, Star, ChevronRight, Layers, Navigation, MapPin
+  Lock, Star, ChevronRight, Layers, Navigation, MapPin,XCircle 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -484,7 +484,14 @@ export default function TicketDetailPage() {
                     <Hammer size={14} /> Mark as working on it
                   </button>
                 )}
-                {(isAdmin || isAssignedAgent) && (
+
+
+
+
+
+
+
+                {/* {(isAdmin || isAssignedAgent) && (
                   <>
                     <button
                       onClick={() => setIsHoldModalOpen(true)}
@@ -501,7 +508,106 @@ export default function TicketDetailPage() {
                       <CheckCircle2 size={14} /> Resolve ticket
                     </button>
                   </>
+                )} */}
+                {(isAdmin || isAssignedAgent) && (
+                  <>
+                    {/* AGENT: Put on hold button */}
+                    {isAssignedAgent && (
+                      <>
+                        <button
+                          onClick={() => setIsHoldModalOpen(true)}
+                          disabled={
+                            ['resolved', 'closed', 'on_hold', 'pending_hold'].includes(ticket.status) ||
+                            ticket.holdRequest?.status === 'pending'
+                          }
+                          style={{
+                            padding: '7px 14px', borderRadius: '8px', border: '1px solid #FCD34D',
+                            background: '#FFFBEB', color: '#92400E', fontWeight: 700, fontSize: '0.8rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                            opacity: (
+                              ['resolved', 'closed', 'on_hold', 'pending_hold'].includes(ticket.status) ||
+                              ticket.holdRequest?.status === 'pending'
+                            ) ? 0.5 : 1
+                          }}
+                        >
+                          <Lock size={14} /> Put on hold
+                        </button>
+
+                        {/* Agent: pending banner */}
+                        {ticket.holdRequest?.status === 'pending' && (
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '7px 14px', borderRadius: '8px',
+                            border: '1px solid #FCD34D', background: '#FFFBEB',
+                            color: '#92400E', fontSize: '0.8rem', fontWeight: 600
+                          }}>
+                            <Clock size={14} color="#92400E" />
+                            Hold request sent — waiting for admin approval
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* ADMIN: approve/reject when pending */}
+                    {isAdmin && ticket.holdRequest?.status === 'pending' && (
+                      <>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: '8px',
+                          padding: '7px 14px', borderRadius: '8px',
+                          border: '1px solid #FCD34D', background: '#FFFBEB',
+                          color: '#92400E', fontSize: '0.8rem', fontWeight: 600
+                        }}>
+                          <Lock size={14} color="#92400E" />
+                          Hold requested: <em style={{ fontWeight: 400, marginLeft: '4px' }}>{ticket.holdRequest?.reason}</em>
+                        </div>
+                        <button
+                          onClick={handleApproveHold}
+                          style={{
+                            padding: '7px 14px', borderRadius: '8px', border: '1px solid #86EFAC',
+                            background: '#ECFDF5', color: '#065F46', fontWeight: 700, fontSize: '0.8rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                          }}
+                        >
+                          <CheckCircle2 size={14} /> Approve hold
+                        </button>
+                        <button
+                          onClick={() => setIsHoldApproveModalOpen(true)}
+                          style={{
+                            padding: '7px 14px', borderRadius: '8px', border: '1px solid #FCA5A5',
+                            background: '#FEF2F2', color: '#991B1B', fontWeight: 700, fontSize: '0.8rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                          }}
+                        >
+                          <XCircle size={14} /> Reject hold
+                        </button>
+                      </>
+                    )}
+
+                    {/* AGENT: resolve button — visible after resume (in_progress) */}
+                    {isAssignedAgent && (
+                      <button
+                        onClick={() => setIsResolutionModalOpen(true)}
+                        disabled={['resolved', 'closed', 'on_hold'].includes(ticket.status)}
+                        style={{
+                          padding: '7px 14px', borderRadius: '8px', border: '1px solid #6EE7B7',
+                          background: '#ECFDF5', color: '#065F46', fontWeight: 700, fontSize: '0.8rem',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                          opacity: ['resolved', 'closed', 'on_hold'].includes(ticket.status) ? 0.5 : 1
+                        }}
+                      >
+                        <CheckCircle2 size={14} /> Resolve ticket
+                      </button>
+                    )}
+                  </>
                 )}
+
+
+
+
+
+
+
+
               </>
             )}
           </div>
@@ -560,7 +666,7 @@ export default function TicketDetailPage() {
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit details</Button>
             )
           )}
-          {(isAssignedAgent || isAdmin) && ticket.status === 'on_hold' && (
+          {isAssignedAgent && ticket.status === 'on_hold' && (
             <Button size="sm" variant="success" onClick={handleResumeTicket}>Resume ticket</Button>
           )}
           <Button variant="outline" size="sm" onClick={() => navigate('/tickets')} leftIcon={<History size={15} />}>All tickets</Button>

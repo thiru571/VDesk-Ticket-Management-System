@@ -19,7 +19,10 @@ const notificationSchema = new mongoose.Schema({
       'sla_warning',
       'sla_breached',
       'ticket_escalated',
-      'feedback_requested'
+      'feedback_requested',
+      'hold_request',      // ✅ ADD THIS
+      'hold_approved',     // ✅ ADD THIS TOO
+      'hold_rejected', 
     ],
     required: true
   },

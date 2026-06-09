@@ -1324,6 +1324,10 @@ const requestHold = async (req, res, next) => {
       });
     }
 
+    // 👇 PASTE HERE
+    console.log('holdRequest:', JSON.stringify(ticket.holdRequest));
+    console.log('hold:', JSON.stringify(ticket.hold));
+
     // Only assigned agent or admin
     if (
       ticket.assignedTo?.toString() !== req.user._id.toString() &&
@@ -1498,20 +1502,25 @@ const approveHold = async (req, res, next) => {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
 
-    // Check if there's a pending hold request
     if (!ticket.holdRequest || ticket.holdRequest.status !== 'pending') {
       return res.status(400).json({ success: false, message: 'No pending hold request to approve.' });
     }
 
-    // Update holdRequest status
+    // Update holdRequest
     ticket.holdRequest.status = 'approved';
     ticket.holdRequest.reviewedBy = req.user._id;
     ticket.holdRequest.reviewedAt = new Date();
 
+    // ✅ Reset hold fields
+    ticket.hold.isHoldRequested = false;
+    ticket.hold.status = 'approved';
+    ticket.hold.approvedBy = req.user._id;
+    ticket.hold.approvedAt = new Date();
+
     // Set ticket status and lock
     const oldStatus = ticket.status;
     ticket.status = 'on_hold';
-    ticket.lockedToAdmin = req.user._id; // Feature 20: Lock to approving admin
+    ticket.lockedToAdmin = req.user._id;
 
     ticket.statusHistory.push({
       from: oldStatus,
@@ -1520,9 +1529,12 @@ const approveHold = async (req, res, next) => {
       reason: 'Hold approved by team'
     });
 
+    ticket.markModified('hold');
+    ticket.markModified('holdRequest');
+
     await ticket.save();
 
-    // Ensure we release agent status if they were on_site
+    // Release agent status if on_site
     const agent = await User.findById(ticket.assignedTo);
     if (agent && agent.liveStatus === 'on_site') {
       agent.liveStatus = 'available';
@@ -1539,36 +1551,42 @@ const approveHold = async (req, res, next) => {
   }
 };
 
-// @desc    Admin rejects hold
-// @route   POST /api/tickets/:id/reject-hold
-// @access  Private (admin)
-// This route is now redundant with reviewHold, but keeping for compatibility if needed.
-// It should ideally call reviewHold internally or be removed.
+
 const rejectHold = async (req, res, next) => {
   try {
     const { denialReason } = req.body;
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
 
-    // Check if there's a pending hold request
     if (!ticket.holdRequest || ticket.holdRequest.status !== 'pending') {
       return res.status(400).json({ success: false, message: 'No pending hold request to reject.' });
     }
 
-    // Update holdRequest status
+    // Update holdRequest
     ticket.holdRequest.status = 'rejected';
     ticket.holdRequest.reviewedBy = req.user._id;
     ticket.holdRequest.reviewedAt = new Date();
     ticket.holdRequest.denialReason = denialReason;
 
+    // ✅ Reset hold fields
+    ticket.hold.isHoldRequested = false;
+    ticket.hold.status = 'rejected';
+    ticket.hold.deniedBy = req.user._id;
+    ticket.hold.deniedAt = new Date();
+    ticket.hold.denialReason = denialReason;
+
     const oldStatus = ticket.status;
-    ticket.status = 'in_progress'; // Revert to in_progress or previous status
+    ticket.status = 'in_progress';
+
     ticket.statusHistory.push({
       from: oldStatus,
       to: 'in_progress',
       changedBy: req.user._id,
       reason: `Hold rejected: ${denialReason || 'No reason provided'}`
     });
+
+    ticket.markModified('hold');
+    ticket.markModified('holdRequest');
 
     await ticket.save();
 
