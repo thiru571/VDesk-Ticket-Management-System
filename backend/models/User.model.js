@@ -49,10 +49,13 @@ const userSchema = new mongoose.Schema({
   employeeId: { type: String, unique: true, sparse: true },
   phone: { type: String, trim: true },
   location: {
-    floor: String,
-    branch: String,
-    city: String
-  },
+  address1: { type: String, default: "" },
+  address2: { type: String, default: "" },
+  city: { type: String, default: "" },
+  district: { type: String, default: "" },
+  state: { type: String, default: "" },
+  pincode: { type: String, default: "" }
+},
   avatar: { type: String, default: null },
   preferredContact: {
     type: String,

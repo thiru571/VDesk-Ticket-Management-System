@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Mail, Camera, Upload, X, RotateCcw, CheckCircle2,
-  User, Shield, Bell, Key, Monitor, Settings, ChevronRight, LogOut,
+  Shield, Bell, Key, Monitor, Settings, ChevronRight, LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -12,7 +12,6 @@ import { getInitials, getAvatarColor } from "../utils/helpers";
 import { Card, Button, Input, Badge } from "../ui";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ─── Indian States ─────────────────────────────────────────────────────────────
 const INDIAN_STATES = [
   "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh",
   "Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka",
@@ -24,7 +23,6 @@ const INDIAN_STATES = [
   "Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry",
 ];
 
-// ─── Settings Dropdown Menu ───────────────────────────────────────────────────
 const menuItemStyle = {
   display: "flex", alignItems: "center", justifyContent: "space-between",
   width: "100%", padding: "10px 14px", border: "none",
@@ -35,15 +33,9 @@ const menuItemStyle = {
 
 function SettingsDropdown({ onSelect, onClose, onSignOut }) {
   const items = [
-    { id: "security",      label: "Security & Auth", icon: Shield,  color: "#2563EB", bg: "#DBEAFE" },
-    { id: "notifications", label: "Notifications",   icon: Bell,    color: "#7C3AED", bg: "#EDE9FE" },
+    { id: "security",      label: "Security & Auth", icon: Shield, color: "#2563EB", bg: "#DBEAFE" },
+    { id: "notifications", label: "Notifications",   icon: Bell,   color: "#7C3AED", bg: "#EDE9FE" },
   ];
-
-  const handleSignOut = () => {
-    onSignOut();
-    onClose();
-  };
-
   return (
     <motion.div
       data-settings-menu="true"
@@ -51,27 +43,13 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -6 }}
       transition={{ duration: 0.15 }}
-      style={{
-        position: "absolute",
-        top: "calc(100% + 8px)",
-        right: 0,
-        background: "white",
-        border: "1px solid var(--border)",
-        borderRadius: "14px",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
-        padding: "8px",
-        zIndex: 9999,
-        minWidth: "220px",
-      }}
+      style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "white", border: "1px solid var(--border)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", padding: "8px", zIndex: 9999, minWidth: "220px" }}
     >
       <p style={{ padding: "6px 14px 8px", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)", borderBottom: "1px solid var(--border-light)", marginBottom: "6px" }}>
         Settings
       </p>
       {items.map(({ id, label, icon: Icon, color, bg }) => (
-        <button
-          key={id}
-          onClick={() => { onSelect(id); onClose(); }}
-          style={menuItemStyle}
+        <button key={id} onClick={() => { onSelect(id); onClose(); }} style={menuItemStyle}
           onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
@@ -85,9 +63,7 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
         </button>
       ))}
       <div style={{ borderTop: "1px solid var(--border-light)", marginTop: "6px", paddingTop: "6px" }}>
-        <button
-          onClick={handleSignOut}
-          style={{ ...menuItemStyle, color: "#DC2626" }}
+        <button onClick={() => { onSignOut(); onClose(); }} style={{ ...menuItemStyle, color: "#DC2626" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#FEF2F2")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
@@ -103,7 +79,6 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
   );
 }
 
-// ─── Avatar Upload Dropdown ───────────────────────────────────────────────────
 function AvatarUploadMenu({ anchorRef, hasAvatar, onUpload, onCamera, onRemove }) {
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   useEffect(() => {
@@ -113,8 +88,7 @@ function AvatarUploadMenu({ anchorRef, hasAvatar, onUpload, onCamera, onRemove }
     }
   }, [anchorRef]);
   return ReactDOM.createPortal(
-    <motion.div
-      data-avatar-menu="true"
+    <motion.div data-avatar-menu="true"
       initial={{ opacity: 0, scale: 0.92, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -6 }} transition={{ duration: 0.15 }}
       style={{ position: "absolute", top: coords.top, left: coords.left, transform: "translateX(-50%)", background: "white", border: "1px solid var(--border)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "8px", zIndex: 9999, minWidth: "210px" }}
@@ -135,7 +109,6 @@ function AvatarUploadMenu({ anchorRef, hasAvatar, onUpload, onCamera, onRemove }
   );
 }
 
-// ─── Camera Modal ─────────────────────────────────────────────────────────────
 function CameraModal({ onCapture, onClose }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -160,14 +133,13 @@ function CameraModal({ onCapture, onClose }) {
     setCaptured(c.toDataURL("image/jpeg", 0.9)); stopCamera();
   };
   const handleRetake = () => { setCaptured(null); startCamera(); };
-  const handleUse = () => { onCapture(captured); onClose(); };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}
       onClick={(e) => { if (e.target === e.currentTarget) { stopCamera(); onClose(); } }}>
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-        style={{ background: "white", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "480px", boxShadow: "0 24px 60px rgba(0,0,0,0.3)" }}>
+        style={{ background: "white", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "480px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h3 style={{ fontWeight: 700, fontSize: "1.1rem", margin: 0 }}>Take a Photo</h3>
           <button onClick={() => { stopCamera(); onClose(); }} style={{ border: "none", background: "var(--surface-alt)", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -182,7 +154,8 @@ function CameraModal({ onCapture, onClose }) {
         ) : (
           <>
             <div style={{ borderRadius: "14px", overflow: "hidden", background: "#000", aspectRatio: "4/3" }}>
-              {!captured ? <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
+              {!captured
+                ? <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
                 : <img src={captured} alt="Captured" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
             </div>
             <canvas ref={canvasRef} style={{ display: "none" }} />
@@ -194,7 +167,7 @@ function CameraModal({ onCapture, onClose }) {
               ) : (
                 <>
                   <Button variant="outline" leftIcon={<RotateCcw size={16} />} onClick={handleRetake}>Retake</Button>
-                  <Button onClick={handleUse} leftIcon={<CheckCircle2 size={16} />}>Use Photo</Button>
+                  <Button onClick={() => { onCapture(captured); onClose(); }} leftIcon={<CheckCircle2 size={16} />}>Use Photo</Button>
                 </>
               )}
             </div>
@@ -205,38 +178,67 @@ function CameraModal({ onCapture, onClose }) {
   );
 }
 
-// ─── Page Title config ────────────────────────────────────────────────────────
+// ─── Helper: build profile state from user object ─────────────────────────────
+function buildProfileFromUser(user) {
+  const parts = (user?.name || "").split(" ");
+  return {
+    firstName:        parts[0] || "",
+    lastName:         parts.slice(1).join(" ") || "",
+    phone:            user?.phone            || "",
+    designation:      user?.designation      || "",
+    preferredContact: user?.preferredContact || "email",
+    location: {
+      address1: user?.location?.address1 || "",
+      address2: user?.location?.address2 || "",
+      city:     user?.location?.city     || "",
+      district: user?.location?.district || "",
+      state:    user?.location?.state    || "",
+      pincode:  user?.location?.pincode  || "",
+    },
+  };
+}
+
 const PAGE_CONFIG = {
-  profile:       { title: "Basic Profile",            subtitle: "Update your account information and preferences." },
+  profile:       { title: "Basic Profile",             subtitle: "Update your account information and preferences." },
   security:      { title: "Security & Authentication", subtitle: "Manage your password, 2FA, and active sessions." },
   notifications: { title: "Notification Preferences", subtitle: "Manage how and when you receive updates about your tickets." },
 };
 
-// ─── Main Profile Page ────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { user, updateUser, logout } = useAuth();
-  const toast = useToast();
+  const toast  = useToast();
   const navigate = useNavigate();
 
-  const [activeView, setActiveView] = useState("profile");
-  const [loading, setLoading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || null);
-  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
-  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [activeView,       setActiveView]       = useState("profile");
+  const [loading,          setLoading]          = useState(false);
+  const [avatarUrl,        setAvatarUrl]        = useState(user?.avatar || null);
+  const [showAvatarMenu,   setShowAvatarMenu]   = useState(false);
+  const [showCameraModal,  setShowCameraModal]  = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
-  const fileInputRef = useRef(null);
-  const cameraButtonRef = useRef(null);
-  const avatarMenuRef = useRef(null);
-  const settingsButtonRef = useRef(null); // still used for outside-click detection
+  const [profile,   setProfile]   = useState(() => buildProfileFromUser(user));
+  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
+  const fileInputRef      = useRef(null);
+  const cameraButtonRef   = useRef(null);
+  const avatarMenuRef     = useRef(null);
+  const settingsButtonRef = useRef(null);
+
+  // ── KEY FIX: re-sync form whenever auth `user` changes (after save OR refresh) ──
+  useEffect(() => {
+    if (!user) return;
+    setProfile(buildProfileFromUser(user));
+    setAvatarUrl(user.avatar || null);
+  }, [user]);
 
   // Close menus on outside click
   useEffect(() => {
     const handler = (e) => {
       if (e.target.closest("[data-avatar-menu]")) return;
-      if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target) &&
-          cameraButtonRef.current && !cameraButtonRef.current.contains(e.target))
-        setShowAvatarMenu(false);
+      if (
+        avatarMenuRef.current && !avatarMenuRef.current.contains(e.target) &&
+        cameraButtonRef.current && !cameraButtonRef.current.contains(e.target)
+      ) setShowAvatarMenu(false);
 
       if (e.target.closest("[data-settings-menu]")) return;
       if (settingsButtonRef.current && !settingsButtonRef.current.contains(e.target))
@@ -246,28 +248,17 @@ export default function ProfilePage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleSettingsSelect = (id) => {
-    setActiveView(id);
+  // ── Avatar handlers ──────────────────────────────────────────────────────────
+  const uploadAvatar = async (dataUrl) => {
+    try {
+      const res = await userService.updateProfile({ avatar: dataUrl });
+      const updated = res?.data?.user || res?.data?.data || res?.data;
+      updateUser(updated);
+      toast.success("Profile photo updated");
+    } catch {
+      toast.error("Failed to upload photo");
+    }
   };
-
-  const nameParts = (user?.name || "").split(" ");
-  const [profile, setProfile] = useState({
-    firstName: nameParts[0] || "",
-    lastName: nameParts.slice(1).join(" ") || "",
-    phone: user?.phone || "",
-    designation: user?.designation || "",
-    preferredContact: user?.preferredContact || "email",
-    location: {
-      address1: user?.location?.address1 || "",
-      address2: user?.location?.address2 || "",
-      city: user?.location?.city || "",
-      district: user?.location?.district || "",
-      state: user?.location?.state || "",
-      pincode: user?.location?.pincode || "",
-    },
-  });
-
-  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -282,43 +273,69 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
     e.target.value = "";
   };
-  const handleCameraCapture = async (dataUrl) => { setAvatarUrl(dataUrl); await uploadAvatar(dataUrl); };
+
+  const handleCameraCapture = async (dataUrl) => {
+    setAvatarUrl(dataUrl);
+    await uploadAvatar(dataUrl);
+  };
+
   const handleRemoveAvatar = async () => {
-    setAvatarUrl(null); setShowAvatarMenu(false);
-    try { const res = await userService.updateProfile({ avatar: null }); updateUser(res.data.user); toast.success("Profile photo removed"); }
-    catch { toast.error("Failed to remove photo"); }
-  };
-  const uploadAvatar = async (dataUrl) => {
-    try { const res = await userService.updateProfile({ avatar: dataUrl }); updateUser(res?.data?.user || res?.data?.data || res?.data); toast.success("Profile photo updated"); }
-    catch { toast.error("Failed to upload photo"); }
-  };
-
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault(); setLoading(true);
+    setAvatarUrl(null);
+    setShowAvatarMenu(false);
     try {
-      const res = await userService.updateProfile({ ...profile, name: `${profile.firstName} ${profile.lastName}`.trim() });
-      updateUser(res.data.user); toast.success("Profile updated successfully");
-    } catch { toast.error("Failed to update profile"); }
-    finally { setLoading(false); }
+      const res = await userService.updateProfile({ avatar: null });
+      const updated = res?.data?.user || res?.data?.data || res?.data;
+      updateUser(updated);
+      toast.success("Profile photo removed");
+    } catch {
+      toast.error("Failed to remove photo");
+    }
   };
 
-  const handleChangePassword = async (e) => {
-    if (e?.preventDefault) e.preventDefault();
-    if (passwords.newPassword !== passwords.confirmPassword) return toast.error("Passwords do not match");
+  // ── Profile save ─────────────────────────────────────────────────────────────
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
     setLoading(true);
     try {
-      await userService.changePassword({ currentPassword: passwords.currentPassword, newPassword: passwords.newPassword });
+      const res = await userService.updateProfile({
+        ...profile,
+        name: `${profile.firstName} ${profile.lastName}`.trim(),
+      });
+      // Safely extract the full updated user — never pass a partial object
+      const updated = res?.data?.user || res?.data?.data || res?.data;
+      updateUser(updated);
+      toast.success("Profile updated successfully");
+    } catch {
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Password change ──────────────────────────────────────────────────────────
+  const handleChangePassword = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    if (passwords.newPassword !== passwords.confirmPassword)
+      return toast.error("Passwords do not match");
+    setLoading(true);
+    try {
+      await userService.changePassword({
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+      });
       toast.success("Password changed successfully");
       setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (err) { toast.error(err.response?.data?.message || "Password change failed"); }
-    finally { setLoading(false); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Password change failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = (e) => { e.preventDefault(); e.stopPropagation(); navigate("/forgot-password"); };
 
   const { title, subtitle } = PAGE_CONFIG[activeView];
 
-  // Custom card header — gear only shown on profile view
   const cardHeader = (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
       <div>
@@ -327,17 +344,8 @@ export default function ProfilePage() {
       </div>
       {activeView === "profile" && (
         <div style={{ position: "relative" }}>
-          <button
-            ref={settingsButtonRef}
-            onClick={() => setShowSettingsMenu((v) => !v)}
-            style={{
-              width: "36px", height: "36px", borderRadius: "10px",
-              border: "1px solid var(--border)",
-              background: showSettingsMenu ? "var(--surface-alt)" : "white",
-              cursor: "pointer", display: "flex", alignItems: "center",
-              justifyContent: "center", transition: "all 0.15s",
-              color: showSettingsMenu ? "var(--primary)" : "var(--text-dim)",
-            }}
+          <button ref={settingsButtonRef} onClick={() => setShowSettingsMenu((v) => !v)}
+            style={{ width: "36px", height: "36px", borderRadius: "10px", border: "1px solid var(--border)", background: showSettingsMenu ? "var(--surface-alt)" : "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", color: showSettingsMenu ? "var(--primary)" : "var(--text-dim)" }}
             title="Settings"
           >
             <motion.div animate={{ rotate: showSettingsMenu ? 45 : 0 }} transition={{ duration: 0.2 }}>
@@ -347,7 +355,7 @@ export default function ProfilePage() {
           <AnimatePresence>
             {showSettingsMenu && (
               <SettingsDropdown
-                onSelect={handleSettingsSelect}
+                onSelect={(id) => setActiveView(id)}
                 onClose={() => setShowSettingsMenu(false)}
                 onSignOut={() => { logout(); navigate("/login"); }}
               />
@@ -366,7 +374,6 @@ export default function ProfilePage() {
       </AnimatePresence>
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="page-layout">
-
         <AnimatePresence mode="wait">
 
           {/* ── General Info ── */}
@@ -380,7 +387,9 @@ export default function ProfilePage() {
                   <div style={{ display: "flex", alignItems: "center", gap: "16px", paddingBottom: "var(--s-6)", borderBottom: "1px solid var(--border-light)" }}>
                     <div ref={avatarMenuRef} style={{ position: "relative", flexShrink: 0 }}>
                       <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: "2px solid #4F7CFF", overflow: "hidden", background: avatarUrl ? "transparent" : getAvatarColor(user?.name), color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "1.2rem" }}>
-                        {avatarUrl ? <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : getInitials(user?.name)}
+                        {avatarUrl
+                          ? <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          : getInitials(user?.name)}
                       </div>
                       <button type="button" ref={cameraButtonRef} onClick={() => setShowAvatarMenu((v) => !v)}
                         style={{ position: "absolute", bottom: "-2px", right: "-2px", width: "24px", height: "24px", borderRadius: "50%", border: "2px solid white", background: "#4F46E5", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -389,7 +398,8 @@ export default function ProfilePage() {
                       <AnimatePresence>
                         {showAvatarMenu && (
                           <AvatarUploadMenu
-                            anchorRef={cameraButtonRef} hasAvatar={!!avatarUrl}
+                            anchorRef={cameraButtonRef}
+                            hasAvatar={!!avatarUrl}
                             onUpload={() => { setShowAvatarMenu(false); setTimeout(() => fileInputRef.current?.click(), 150); }}
                             onCamera={() => { setShowAvatarMenu(false); setTimeout(() => setShowCameraModal(true), 150); }}
                             onRemove={handleRemoveAvatar}
@@ -412,10 +422,10 @@ export default function ProfilePage() {
 
                   {/* Fields */}
                   <div className="form-grid-2">
-                    <Input label="First Name" value={profile.firstName} onChange={(e) => setProfile({ ...profile, firstName: e.target.value })} />
-                    <Input label="Last Name" value={profile.lastName} onChange={(e) => setProfile({ ...profile, lastName: e.target.value })} />
-                    <Input label="Designation" value={profile.designation} onChange={(e) => setProfile({ ...profile, designation: e.target.value })} />
-                    <Input label="Phone Number" placeholder="+1 (555) 000-0000" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+                    <Input label="First Name"   value={profile.firstName}   onChange={(e) => setProfile({ ...profile, firstName: e.target.value })} />
+                    <Input label="Last Name"    value={profile.lastName}    onChange={(e) => setProfile({ ...profile, lastName: e.target.value })} />
+                    <Input label="Designation"  value={profile.designation} onChange={(e) => setProfile({ ...profile, designation: e.target.value })} />
+                    <Input label="Phone Number" placeholder="+91 00000 00000" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
                     <div className="input-group">
                       <label className="input-label">Preferred Contact</label>
                       <select className="input" value={profile.preferredContact} onChange={(e) => setProfile({ ...profile, preferredContact: e.target.value })}>
@@ -442,16 +452,7 @@ export default function ProfilePage() {
                           <label className="input-label">District <span style={{ color: "var(--danger)" }}>*</span></label>
                           <select className="input" value={profile.location.district} onChange={(e) => setProfile({ ...profile, location: { ...profile.location, district: e.target.value } })}>
                             <option value="">Select District</option>
-                            <option value="Chennai">Chennai</option>
-                            <option value="Coimbatore">Coimbatore</option>
-                            <option value="Madurai">Madurai</option>
-                            <option value="Salem">Salem</option>
-                            <option value="Trichy">Trichy</option>
-                            <option value="Bengaluru Urban">Bengaluru Urban</option>
-                            <option value="Mumbai City">Mumbai City</option>
-                            <option value="Hyderabad">Hyderabad</option>
-                            <option value="Pune">Pune</option>
-                            <option value="Other">Other</option>
+                            {["Chennai","Coimbatore","Madurai","Salem","Trichy","Bengaluru Urban","Mumbai City","Hyderabad","Pune","Other"].map(d => <option key={d} value={d}>{d}</option>)}
                           </select>
                         </div>
                         <div className="input-group">
@@ -477,55 +478,37 @@ export default function ProfilePage() {
           {/* ── Security & Auth ── */}
           {activeView === "security" && (
             <motion.div key="security" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
-              {/* Change Password */}
               <Card style={{ marginBottom: "24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
                   <div>
                     <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>Security & Authentication</h2>
                     <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>Manage your password, 2FA, and active sessions.</p>
                   </div>
-                  <button
-                    onClick={() => setActiveView("profile")}
-                    style={{
-                      display: "flex", alignItems: "center", gap: "6px",
-                      padding: "8px 14px", borderRadius: "10px",
-                      border: "1px solid var(--border)", background: "white",
-                      cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
-                      color: "var(--text-dim)", transition: "all 0.15s",
-                    }}
+                  <button onClick={() => setActiveView("profile")}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", borderRadius: "10px", border: "1px solid var(--border)", background: "white", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-dim)", transition: "all 0.15s" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-alt)"; e.currentTarget.style.color = "var(--text-main)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "var(--text-dim)"; }}
-                  >
-                    ← Back
-                  </button>
+                  >← Back</button>
                 </div>
                 <div className="flex-col gap-5">
                   <Input type="password" label="Current Password" placeholder="••••••••" value={passwords.currentPassword} onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })} />
                   <div className="form-grid-2">
-                    <Input type="password" label="New Password" placeholder="••••••••" value={passwords.newPassword} onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} />
+                    <Input type="password" label="New Password"     placeholder="••••••••" value={passwords.newPassword}     onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} />
                     <Input type="password" label="Confirm Password" placeholder="••••••••" value={passwords.confirmPassword} onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })} />
                   </div>
-
-                  {/* Password Strength */}
                   <div>
                     <div style={{ height: "8px", borderRadius: "999px", background: "#E5E7EB", overflow: "hidden" }}>
                       <div style={{ width: passwords.newPassword.length < 4 ? "25%" : passwords.newPassword.length < 8 ? "50%" : "100%", height: "100%", background: passwords.newPassword.length < 4 ? "#EF4444" : passwords.newPassword.length < 8 ? "#F59E0B" : "#10B981", transition: "0.3s" }} />
                     </div>
-                    <small style={{ color: "var(--text-dim)", marginTop: "6px", display: "block" }}>
-                      Use at least 8 characters including numbers and symbols.
-                    </small>
+                    <small style={{ color: "var(--text-dim)", marginTop: "6px", display: "block" }}>Use at least 8 characters including numbers and symbols.</small>
                   </div>
-
                   <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                     <Button onClick={handleChangePassword} isLoading={loading} leftIcon={<Key size={16} />}>Update Password</Button>
-                    <button onClick={handleForgotPassword} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontWeight: 600 }}>
-                      Forgot Password?
-                    </button>
+                    <button onClick={handleForgotPassword} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontWeight: 600 }}>Forgot Password?</button>
                   </div>
                 </div>
               </Card>
 
-              {/* Security Cards */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                 <Card>
                   <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
@@ -553,14 +536,13 @@ export default function ProfilePage() {
                 </Card>
               </div>
 
-              {/* Danger Zone */}
               <Card style={{ marginTop: "24px", border: "1px solid #FECACA", background: "#FEF2F2" }}>
                 <div className="flex-between">
                   <div>
                     <h3 style={{ color: "#DC2626", marginBottom: "6px" }}>Deactivate Account</h3>
                     <p style={{ color: "#7F1D1D", fontSize: "0.9rem" }}>Permanently remove your access to the portal.</p>
                   </div>
-                  <Button variant="danger" onClick={() => { if (window.confirm("Are you sure you want to deactivate your account?")) toast.warning("Account deactivation requires administrator approval."); }}>
+                  <Button variant="danger" onClick={() => { if (window.confirm("Are you sure?")) toast.warning("Account deactivation requires administrator approval."); }}>
                     Deactivate
                   </Button>
                 </div>
@@ -577,27 +559,18 @@ export default function ProfilePage() {
                     <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>Notification Preferences</h2>
                     <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>Manage how and when you receive updates about your tickets.</p>
                   </div>
-                  <button
-                    onClick={() => setActiveView("profile")}
-                    style={{
-                      display: "flex", alignItems: "center", gap: "6px",
-                      padding: "8px 14px", borderRadius: "10px",
-                      border: "1px solid var(--border)", background: "white",
-                      cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
-                      color: "var(--text-dim)", transition: "all 0.15s",
-                    }}
+                  <button onClick={() => setActiveView("profile")}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", borderRadius: "10px", border: "1px solid var(--border)", background: "white", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-dim)", transition: "all 0.15s" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-alt)"; e.currentTarget.style.color = "var(--text-main)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "var(--text-dim)"; }}
-                  >
-                    ← Back
-                  </button>
+                  >← Back</button>
                 </div>
                 <div className="flex-col gap-4">
                   {[
                     { id: "email",     label: "Email Notifications", desc: "Receive status updates and replies via email." },
-                    { id: "inApp",     label: "In-App Alerts",        desc: "Show real-time toast notifications in the portal." },
-                    { id: "onAssign",  label: "Assignment Alerts",    desc: "Notify me when I am assigned to a ticket." },
-                    { id: "onComment", label: "Comment Alerts",       desc: "Notify me when someone comments on my tickets." },
+                    { id: "inApp",     label: "In-App Alerts",       desc: "Show real-time toast notifications in the portal." },
+                    { id: "onAssign",  label: "Assignment Alerts",   desc: "Notify me when I am assigned to a ticket." },
+                    { id: "onComment", label: "Comment Alerts",      desc: "Notify me when someone comments on my tickets." },
                   ].map((pref) => (
                     <div key={pref.id} className="flex-between" style={{ padding: "16px 20px", background: "var(--surface-alt)", borderRadius: "16px", border: "1px solid var(--border)" }}>
                       <div className="flex-col">
@@ -607,8 +580,12 @@ export default function ProfilePage() {
                       <div
                         onClick={async () => {
                           const newPrefs = { ...user.notificationPreferences, [pref.id]: !user.notificationPreferences?.[pref.id] };
-                          try { const res = await userService.updateProfile({ notificationPreferences: newPrefs }); updateUser(res.data.user); toast.success(`${pref.label} updated`); }
-                          catch { toast.error("Failed to update preference"); }
+                          try {
+                            const res = await userService.updateProfile({ notificationPreferences: newPrefs });
+                            const updated = res?.data?.user || res?.data?.data || res?.data;
+                            updateUser(updated);
+                            toast.success(`${pref.label} updated`);
+                          } catch { toast.error("Failed to update preference"); }
                         }}
                         style={{ width: "44px", height: "24px", background: user.notificationPreferences?.[pref.id] ? "var(--primary)" : "var(--border)", borderRadius: "20px", padding: "4px", cursor: "pointer", display: "flex", justifyContent: user.notificationPreferences?.[pref.id] ? "flex-end" : "flex-start", transition: "all 0.2s ease", flexShrink: 0 }}
                       >
