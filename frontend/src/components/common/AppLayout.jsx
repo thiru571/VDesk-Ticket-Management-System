@@ -341,6 +341,7 @@ export default function AppLayout() {
                     width: '42px',
                     height: '42px',
                     borderRadius: '50%',
+                    border: '1.5px solid var(--primary)',
                     background: '#1F4E79',
                     color: '#fff',
                     display: 'flex',
@@ -350,9 +351,9 @@ export default function AppLayout() {
                     overflow: 'hidden'
                   }}
                 >
-                  {user?.profileImage ? (
+                  {user?.avatar ? (
                     <img
-                      src={user.profileImage}
+                      src={user.avatar}
                       alt="Profile"
                       style={{
                         width: '100%',
