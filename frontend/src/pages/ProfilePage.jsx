@@ -12,8 +12,9 @@ import {
   Shield,
   Bell,
   Key,
-  KeyRound,
   Monitor,
+  Settings,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -34,21 +35,66 @@ const INDIAN_STATES = [
   "Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry",
 ];
 
-const TABS = [
-  { id: "profile",       label: "General info",    icon: User   },
-  { id: "security",      label: "Security & Auth", icon: Shield },
-  { id: "notifications", label: "Notifications",   icon: Bell   },
-];
-
-// ─── Avatar Upload Dropdown ───────────────────────────────────────────────────
+// ─── Settings Dropdown Menu ───────────────────────────────────────────────────
 const menuItemStyle = {
-  display: "flex", alignItems: "center", gap: "10px", width: "100%",
-  padding: "10px 14px", border: "none", background: "transparent",
-  borderRadius: "10px", cursor: "pointer", fontSize: "0.875rem",
-  fontWeight: 500, color: "var(--text-main)", transition: "background 0.15s",
-  textAlign: "left",
+  display: "flex", alignItems: "center", justifyContent: "space-between",
+  width: "100%", padding: "10px 14px", border: "none",
+  background: "transparent", borderRadius: "10px", cursor: "pointer",
+  fontSize: "0.875rem", fontWeight: 500, color: "var(--text-main)",
+  transition: "background 0.15s", textAlign: "left",
 };
 
+function SettingsDropdown({ onSelect, onClose }) {
+  const items = [
+    { id: "security",      label: "Security & Auth", icon: Shield, color: "#2563EB", bg: "#DBEAFE" },
+    { id: "notifications", label: "Notifications",   icon: Bell,   color: "#7C3AED", bg: "#EDE9FE" },
+  ];
+
+  return (
+    <motion.div
+      data-settings-menu="true"
+      initial={{ opacity: 0, scale: 0.92, y: -6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: -6 }}
+      transition={{ duration: 0.15 }}
+      style={{
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        right: 0,
+        background: "white",
+        border: "1px solid var(--border)",
+        borderRadius: "14px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+        padding: "8px",
+        zIndex: 9999,
+        minWidth: "220px",
+      }}
+    >
+      <p style={{ padding: "6px 14px 8px", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)", borderBottom: "1px solid var(--border-light)", marginBottom: "6px" }}>
+        Settings
+      </p>
+      {items.map(({ id, label, icon: Icon, color, bg }) => (
+        <button
+          key={id}
+          onClick={() => { onSelect(id); onClose(); }}
+          style={menuItemStyle}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon size={14} color={color} />
+            </div>
+            {label}
+          </div>
+          <ChevronRight size={14} color="var(--text-dim)" />
+        </button>
+      ))}
+    </motion.div>
+  );
+}
+
+// ─── Avatar Upload Dropdown ───────────────────────────────────────────────────
 function AvatarUploadMenu({ anchorRef, hasAvatar, onUpload, onCamera, onRemove }) {
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   useEffect(() => {
@@ -65,14 +111,14 @@ function AvatarUploadMenu({ anchorRef, hasAvatar, onUpload, onCamera, onRemove }
       style={{ position: "absolute", top: coords.top, left: coords.left, transform: "translateX(-50%)", background: "white", border: "1px solid var(--border)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "8px", zIndex: 9999, minWidth: "210px" }}
     >
       <button onClick={onUpload} style={menuItemStyle} onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-        <Upload size={16} /><span>Upload from computer</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><Upload size={16} /><span>Upload from computer</span></div>
       </button>
       <button onClick={onCamera} style={menuItemStyle} onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-        <Camera size={16} /><span>Take a photo</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><Camera size={16} /><span>Take a photo</span></div>
       </button>
       {hasAvatar && (
         <button onClick={onRemove} style={{ ...menuItemStyle, color: "var(--danger)" }}>
-          <X size={16} /><span>Remove photo</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><X size={16} /><span>Remove photo</span></div>
         </button>
       )}
     </motion.div>,
@@ -150,32 +196,50 @@ function CameraModal({ onCapture, onClose }) {
   );
 }
 
+// ─── Page Title config ────────────────────────────────────────────────────────
+const PAGE_CONFIG = {
+  profile:       { title: "Basic Profile",            subtitle: "Update your account information and preferences." },
+  security:      { title: "Security & Authentication", subtitle: "Manage your password, 2FA, and active sessions." },
+  notifications: { title: "Notification Preferences", subtitle: "Manage how and when you receive updates about your tickets." },
+};
+
 // ─── Main Profile Page ────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeView, setActiveView] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar || null);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
   const fileInputRef = useRef(null);
   const cameraButtonRef = useRef(null);
   const avatarMenuRef = useRef(null);
+  const settingsButtonRef = useRef(null); // still used for outside-click detection
 
+  // Close menus on outside click
   useEffect(() => {
     const handler = (e) => {
       if (e.target.closest("[data-avatar-menu]")) return;
       if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target) &&
           cameraButtonRef.current && !cameraButtonRef.current.contains(e.target))
         setShowAvatarMenu(false);
+
+      if (e.target.closest("[data-settings-menu]")) return;
+      if (settingsButtonRef.current && !settingsButtonRef.current.contains(e.target))
+        setShowSettingsMenu(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const handleSettingsSelect = (id) => {
+    setActiveView(id);
+  };
 
   const nameParts = (user?.name || "").split(" ");
   const [profile, setProfile] = useState({
@@ -243,6 +307,47 @@ export default function ProfilePage() {
 
   const handleForgotPassword = (e) => { e.preventDefault(); e.stopPropagation(); navigate("/forgot-password"); };
 
+  const { title, subtitle } = PAGE_CONFIG[activeView];
+
+  // Custom card header — gear only shown on profile view
+  const cardHeader = (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
+      <div>
+        <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>{title}</h2>
+        <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>{subtitle}</p>
+      </div>
+      {activeView === "profile" && (
+        <div style={{ position: "relative" }}>
+          <button
+            ref={settingsButtonRef}
+            onClick={() => setShowSettingsMenu((v) => !v)}
+            style={{
+              width: "36px", height: "36px", borderRadius: "10px",
+              border: "1px solid var(--border)",
+              background: showSettingsMenu ? "var(--surface-alt)" : "white",
+              cursor: "pointer", display: "flex", alignItems: "center",
+              justifyContent: "center", transition: "all 0.15s",
+              color: showSettingsMenu ? "var(--primary)" : "var(--text-dim)",
+            }}
+            title="Settings"
+          >
+            <motion.div animate={{ rotate: showSettingsMenu ? 45 : 0 }} transition={{ duration: 0.2 }}>
+              <Settings size={16} />
+            </motion.div>
+          </button>
+          <AnimatePresence>
+            {showSettingsMenu && (
+              <SettingsDropdown
+                onSelect={handleSettingsSelect}
+                onClose={() => setShowSettingsMenu(false)}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
@@ -252,49 +357,13 @@ export default function ProfilePage() {
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="page-layout">
 
-        {/* ── Top Tab Navbar ── */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: "4px",
-          marginBottom: "var(--s-8)",
-          borderBottom: "2px solid var(--border-light)",
-          paddingBottom: "0",
-        }}>
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: "8px",
-                  padding: "10px 18px",
-                  border: "none",
-                  borderBottom: isActive ? "2px solid var(--primary)" : "2px solid transparent",
-                  marginBottom: "-2px",
-                  background: "transparent",
-                  cursor: "pointer",
-                  fontSize: "0.875rem",
-                  fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "var(--primary)" : "var(--text-dim)",
-                  borderRadius: "0",
-                  transition: "all 0.15s",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <tab.icon size={16} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── Tab Content ── */}
         <AnimatePresence mode="wait">
 
           {/* ── General Info ── */}
-          {activeTab === "profile" && (
-            <motion.div key="profile" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
-              <Card title="Basic Profile" subtitle="Update your account information and preferences.">
+          {activeView === "profile" && (
+            <motion.div key="profile" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+              <Card>
+                {cardHeader}
                 <form onSubmit={handleUpdateProfile} className="flex-col gap-6">
 
                   {/* Avatar + User Summary */}
@@ -396,310 +465,133 @@ export default function ProfilePage() {
           )}
 
           {/* ── Security & Auth ── */}
-          {activeTab === "security" && (
-  <motion.div
-    key="security"
-    initial={{ opacity: 0, x: 16 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: -16 }}
-  >
-    {/* Change Password */}
-    <Card
-      title="Change Password"
-      subtitle="Update your account password regularly to keep your account secure."
-      style={{
-        marginBottom: "24px",
-      }}
-    >
-      <div className="flex-col gap-5">
-        <Input
-          type="password"
-          label="Current Password"
-          placeholder="••••••••"
-          value={passwords.currentPassword}
-          onChange={(e) =>
-            setPasswords({
-              ...passwords,
-              currentPassword: e.target.value,
-            })
-          }
-        />
+          {activeView === "security" && (
+            <motion.div key="security" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+              {/* Change Password */}
+              <Card style={{ marginBottom: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
+                  <div>
+                    <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>Security & Authentication</h2>
+                    <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>Manage your password, 2FA, and active sessions.</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveView("profile")}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "6px",
+                      padding: "8px 14px", borderRadius: "10px",
+                      border: "1px solid var(--border)", background: "white",
+                      cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
+                      color: "var(--text-dim)", transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-alt)"; e.currentTarget.style.color = "var(--text-main)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                  >
+                    ← Back
+                  </button>
+                </div>
+                <div className="flex-col gap-5">
+                  <Input type="password" label="Current Password" placeholder="••••••••" value={passwords.currentPassword} onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })} />
+                  <div className="form-grid-2">
+                    <Input type="password" label="New Password" placeholder="••••••••" value={passwords.newPassword} onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} />
+                    <Input type="password" label="Confirm Password" placeholder="••••••••" value={passwords.confirmPassword} onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })} />
+                  </div>
 
-        <div className="form-grid-2">
-          <Input
-            type="password"
-            label="New Password"
-            placeholder="••••••••"
-            value={passwords.newPassword}
-            onChange={(e) =>
-              setPasswords({
-                ...passwords,
-                newPassword: e.target.value,
-              })
-            }
-          />
+                  {/* Password Strength */}
+                  <div>
+                    <div style={{ height: "8px", borderRadius: "999px", background: "#E5E7EB", overflow: "hidden" }}>
+                      <div style={{ width: passwords.newPassword.length < 4 ? "25%" : passwords.newPassword.length < 8 ? "50%" : "100%", height: "100%", background: passwords.newPassword.length < 4 ? "#EF4444" : passwords.newPassword.length < 8 ? "#F59E0B" : "#10B981", transition: "0.3s" }} />
+                    </div>
+                    <small style={{ color: "var(--text-dim)", marginTop: "6px", display: "block" }}>
+                      Use at least 8 characters including numbers and symbols.
+                    </small>
+                  </div>
 
-          <Input
-            type="password"
-            label="Confirm Password"
-            placeholder="••••••••"
-            value={passwords.confirmPassword}
-            onChange={(e) =>
-              setPasswords({
-                ...passwords,
-                confirmPassword: e.target.value,
-              })
-            }
-          />
-        </div>
+                  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                    <Button onClick={handleChangePassword} isLoading={loading} leftIcon={<Key size={16} />}>Update Password</Button>
+                    <button onClick={handleForgotPassword} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontWeight: 600 }}>
+                      Forgot Password?
+                    </button>
+                  </div>
+                </div>
+              </Card>
 
-        {/* Password Strength */}
-        <div>
-          <div
-            style={{
-              height: "8px",
-              borderRadius: "999px",
-              background: "#E5E7EB",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                width:
-                  passwords.newPassword.length < 4
-                    ? "25%"
-                    : passwords.newPassword.length < 8
-                    ? "50%"
-                    : "100%",
-                height: "100%",
-                background:
-                  passwords.newPassword.length < 4
-                    ? "#EF4444"
-                    : passwords.newPassword.length < 8
-                    ? "#F59E0B"
-                    : "#10B981",
-                transition: "0.3s",
-              }}
-            />
-          </div>
+              {/* Security Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                <Card>
+                  <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                    <div style={{ width: "54px", height: "54px", borderRadius: "14px", background: "#DBEAFE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Shield size={24} color="#2563EB" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ marginBottom: "8px", fontSize: "1rem", fontWeight: 700 }}>Two-Factor Authentication</h3>
+                      <p style={{ color: "var(--text-dim)", fontSize: "0.9rem", marginBottom: "16px" }}>Add an extra layer of security by requiring a verification code.</p>
+                      <Button variant="outline">Configure 2FA →</Button>
+                    </div>
+                  </div>
+                </Card>
+                <Card>
+                  <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                    <div style={{ width: "54px", height: "54px", borderRadius: "14px", background: "#FCE7F3", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Monitor size={24} color="#DB2777" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ marginBottom: "8px", fontSize: "1rem", fontWeight: 700 }}>Active Sessions</h3>
+                      <p style={{ color: "var(--text-dim)", fontSize: "0.9rem", marginBottom: "16px" }}>You are currently logged in on 3 devices.</p>
+                      <Button variant="outline">View Sessions →</Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
 
-          <small
-            style={{
-              color: "var(--text-dim)",
-              marginTop: "6px",
-              display: "block",
-            }}
-          >
-            Use at least 8 characters including numbers and symbols.
-          </small>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            alignItems: "center",
-          }}
-        >
-          <Button
-            onClick={handleChangePassword}
-            isLoading={loading}
-            leftIcon={<Key size={16} />}
-          >
-            Update Password
-          </Button>
-
-          <button
-            onClick={handleForgotPassword}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--primary)",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
-          >
-            Forgot Password?
-          </button>
-        </div>
-      </div>
-    </Card>
-
-    {/* Security Cards */}
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "20px",
-      }}
-    >
-      {/* 2FA */}
-      <Card>
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            alignItems: "flex-start",
-          }}
-        >
-          <div
-            style={{
-              width: "54px",
-              height: "54px",
-              borderRadius: "14px",
-              background: "#DBEAFE",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Shield size={24} color="#2563EB" />
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <h3
-              style={{
-                marginBottom: "8px",
-                fontSize: "1rem",
-                fontWeight: 700,
-              }}
-            >
-              Two-Factor Authentication
-            </h3>
-
-            <p
-              style={{
-                color: "var(--text-dim)",
-                fontSize: "0.9rem",
-                marginBottom: "16px",
-              }}
-            >
-              Add an extra layer of security by requiring a verification code.
-            </p>
-
-            <Button variant="outline">
-              Configure 2FA →
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Sessions */}
-      <Card>
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            alignItems: "flex-start",
-          }}
-        >
-          <div
-            style={{
-              width: "54px",
-              height: "54px",
-              borderRadius: "14px",
-              background: "#FCE7F3",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Monitor size={24} color="#DB2777" />
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <h3
-              style={{
-                marginBottom: "8px",
-                fontSize: "1rem",
-                fontWeight: 700,
-              }}
-            >
-              Active Sessions
-            </h3>
-
-            <p
-              style={{
-                color: "var(--text-dim)",
-                fontSize: "0.9rem",
-                marginBottom: "16px",
-              }}
-            >
-              You are currently logged in on 3 devices.
-            </p>
-
-            <Button variant="outline">
-              View Sessions →
-            </Button>
-          </div>
-        </div>
-      </Card>
-    </div>
-
-    {/* Danger Zone */}
-    <Card
-      style={{
-        marginTop: "24px",
-        border: "1px solid #FECACA",
-        background: "#FEF2F2",
-      }}
-    >
-      <div className="flex-between">
-        <div>
-          <h3
-            style={{
-              color: "#DC2626",
-              marginBottom: "6px",
-            }}
-          >
-            Deactivate Account
-          </h3>
-
-          <p
-            style={{
-              color: "#7F1D1D",
-              fontSize: "0.9rem",
-            }}
-          >
-            Permanently remove your access to the portal.
-          </p>
-        </div>
-
-        <Button
-          variant="danger"
-          onClick={() => {
-            if (
-              window.confirm(
-                "Are you sure you want to deactivate your account?"
-              )
-            ) {
-              toast.warning(
-                "Account deactivation requires administrator approval."
-              );
-            }
-          }}
-        >
-          Deactivate
-        </Button>
-      </div>
-    </Card>
-  </motion.div>
-)}
+              {/* Danger Zone */}
+              <Card style={{ marginTop: "24px", border: "1px solid #FECACA", background: "#FEF2F2" }}>
+                <div className="flex-between">
+                  <div>
+                    <h3 style={{ color: "#DC2626", marginBottom: "6px" }}>Deactivate Account</h3>
+                    <p style={{ color: "#7F1D1D", fontSize: "0.9rem" }}>Permanently remove your access to the portal.</p>
+                  </div>
+                  <Button variant="danger" onClick={() => { if (window.confirm("Are you sure you want to deactivate your account?")) toast.warning("Account deactivation requires administrator approval."); }}>
+                    Deactivate
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          )}
 
           {/* ── Notifications ── */}
-          {activeTab === "notifications" && (
-            <motion.div key="notifications" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
-              <Card title="Communication Preferences" subtitle="Manage how and when you receive updates about your tickets.">
-                <div className="flex-col gap-6">
+          {activeView === "notifications" && (
+            <motion.div key="notifications" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+              <Card>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
+                  <div>
+                    <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>Notification Preferences</h2>
+                    <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>Manage how and when you receive updates about your tickets.</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveView("profile")}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "6px",
+                      padding: "8px 14px", borderRadius: "10px",
+                      border: "1px solid var(--border)", background: "white",
+                      cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
+                      color: "var(--text-dim)", transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-alt)"; e.currentTarget.style.color = "var(--text-main)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                  >
+                    ← Back
+                  </button>
+                </div>
+                <div className="flex-col gap-4">
                   {[
-                    { id: "email",    label: "Email Notifications", desc: "Receive status updates and replies via email." },
-                    { id: "inApp",    label: "In-App Alerts",        desc: "Show real-time toast notifications in the portal." },
-                    { id: "onAssign", label: "Assignment Alerts",    desc: "Notify me when I am assigned to a ticket." },
-                    { id: "onComment",label: "Comment Alerts",       desc: "Notify me when someone comments on my tickets." },
+                    { id: "email",     label: "Email Notifications", desc: "Receive status updates and replies via email." },
+                    { id: "inApp",     label: "In-App Alerts",        desc: "Show real-time toast notifications in the portal." },
+                    { id: "onAssign",  label: "Assignment Alerts",    desc: "Notify me when I am assigned to a ticket." },
+                    { id: "onComment", label: "Comment Alerts",       desc: "Notify me when someone comments on my tickets." },
                   ].map((pref) => (
                     <div key={pref.id} className="flex-between" style={{ padding: "16px 20px", background: "var(--surface-alt)", borderRadius: "16px", border: "1px solid var(--border)" }}>
                       <div className="flex-col">
-                        <span style={{ fontWeight: 800, color: "var(--text-main)" }}>{pref.label}</span>
+                        <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{pref.label}</span>
                         <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>{pref.desc}</span>
                       </div>
                       <div
@@ -708,7 +600,7 @@ export default function ProfilePage() {
                           try { const res = await userService.updateProfile({ notificationPreferences: newPrefs }); updateUser(res.data.user); toast.success(`${pref.label} updated`); }
                           catch { toast.error("Failed to update preference"); }
                         }}
-                        style={{ width: "44px", height: "24px", background: user.notificationPreferences?.[pref.id] ? "var(--primary)" : "var(--border)", borderRadius: "20px", padding: "4px", cursor: "pointer", display: "flex", justifyContent: user.notificationPreferences?.[pref.id] ? "flex-end" : "flex-start", transition: "all 0.2s ease" }}
+                        style={{ width: "44px", height: "24px", background: user.notificationPreferences?.[pref.id] ? "var(--primary)" : "var(--border)", borderRadius: "20px", padding: "4px", cursor: "pointer", display: "flex", justifyContent: user.notificationPreferences?.[pref.id] ? "flex-end" : "flex-start", transition: "all 0.2s ease", flexShrink: 0 }}
                       >
                         <motion.div layout style={{ width: "16px", height: "16px", background: "white", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }} />
                       </div>
@@ -716,8 +608,6 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </Card>
-
-              
             </motion.div>
           )}
 
