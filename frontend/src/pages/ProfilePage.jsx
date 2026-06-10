@@ -2,19 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  Mail,
-  Camera,
-  Upload,
-  X,
-  RotateCcw,
-  CheckCircle2,
-  User,
-  Shield,
-  Bell,
-  Key,
-  Monitor,
-  Settings,
-  ChevronRight,
+  Mail, Camera, Upload, X, RotateCcw, CheckCircle2,
+  User, Shield, Bell, Key, Monitor, Settings, ChevronRight, LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -44,11 +33,16 @@ const menuItemStyle = {
   transition: "background 0.15s", textAlign: "left",
 };
 
-function SettingsDropdown({ onSelect, onClose }) {
+function SettingsDropdown({ onSelect, onClose, onSignOut }) {
   const items = [
-    { id: "security",      label: "Security & Auth", icon: Shield, color: "#2563EB", bg: "#DBEAFE" },
-    { id: "notifications", label: "Notifications",   icon: Bell,   color: "#7C3AED", bg: "#EDE9FE" },
+    { id: "security",      label: "Security & Auth", icon: Shield,  color: "#2563EB", bg: "#DBEAFE" },
+    { id: "notifications", label: "Notifications",   icon: Bell,    color: "#7C3AED", bg: "#EDE9FE" },
   ];
+
+  const handleSignOut = () => {
+    onSignOut();
+    onClose();
+  };
 
   return (
     <motion.div
@@ -90,6 +84,21 @@ function SettingsDropdown({ onSelect, onClose }) {
           <ChevronRight size={14} color="var(--text-dim)" />
         </button>
       ))}
+      <div style={{ borderTop: "1px solid var(--border-light)", marginTop: "6px", paddingTop: "6px" }}>
+        <button
+          onClick={handleSignOut}
+          style={{ ...menuItemStyle, color: "#DC2626" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#FEF2F2")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#FEE2E2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <LogOut size={14} color="#DC2626" />
+            </div>
+            Sign Out
+          </div>
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -205,7 +214,7 @@ const PAGE_CONFIG = {
 
 // ─── Main Profile Page ────────────────────────────────────────────────────────
 export default function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -340,6 +349,7 @@ export default function ProfilePage() {
               <SettingsDropdown
                 onSelect={handleSettingsSelect}
                 onClose={() => setShowSettingsMenu(false)}
+                onSignOut={() => { logout(); navigate("/login"); }}
               />
             )}
           </AnimatePresence>

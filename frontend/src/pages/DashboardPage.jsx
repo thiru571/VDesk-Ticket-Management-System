@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
-  Ticket,
-  Clock,
-  CheckCircle2,
-  TrendingUp,
-  MoreHorizontal,
-  ArrowUpRight,
-  AlertCircle,
-  Activity,
-  Star,
-  Users,
-  Shield,
-  AlertTriangle,
+  Ticket, Clock, CheckCircle2, TrendingUp, MoreHorizontal, ArrowUpRight,
+  AlertCircle, Activity, Star, Users, Shield, AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -23,7 +13,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { Button, Card, Badge } from "../ui";
-import { timeAgo } from "../utils/helpers";
+import { timeAgo, getInitials, getAvatarColor } from "../utils/helpers";
 
 const PRIORITY_COLORS = {
   critical: "var(--danger)",
@@ -41,6 +31,33 @@ const STATUS_COLOR = {
   closed: "success",
   reopened: "warning",
 };
+
+// ─── Profile Avatar (hero corner) ────────────────────────────────────────────
+function HeroAvatar({ user, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      title="View Profile"
+      style={{
+        width: "48px", height: "48px", borderRadius: "50%",
+        border: "2.5px solid rgba(255,255,255,0.7)",
+        overflow: "hidden", cursor: "pointer", flexShrink: 0,
+        background: user?.avatar ? "transparent" : getAvatarColor(user?.name),
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontWeight: 700, fontSize: "1rem", color: "#fff",
+        boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+        transition: "transform 0.15s, box-shadow 0.15s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.07)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.35)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.25)"; }}
+    >
+      {user?.avatar
+        ? <img src={user.avatar} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        : getInitials(user?.name)
+      }
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -81,11 +98,7 @@ export default function DashboardPage() {
         )
       );
     });
-    return () => {
-      offTicketCreated?.();
-      offStatusChanged?.();
-      offAgentStatus?.();
-    };
+    return () => { offTicketCreated?.(); offStatusChanged?.(); offAgentStatus?.(); };
   }, [on]);
 
   // ── Fetch data ────────────────────────────────────────────────────────
@@ -93,7 +106,6 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         if (!isAdminOrAgent) {
-          // ── EMPLOYEE: single call returns stats + recentTickets ──
           const res = await dashboardService.employee();
           const s = res.data.stats;
           setStats({
@@ -109,18 +121,11 @@ export default function DashboardPage() {
           return;
         }
 
-        // ── ADMIN / AGENT: two parallel calls ──
         const [statsRes, ticketsRes] = await Promise.all([
           dashboardService.admin(),
-          ticketService.getAll({
-            limit: 6,
-            myTickets: isAgent ? "true" : undefined,
-          }),
+          ticketService.getAll({ limit: 6, myTickets: isAgent ? "true" : undefined }),
         ]);
-
         const s = statsRes.data.stats;
-
-        // Build chart data (last 7 days)
         const trend = s.last7DaysTrend || { created: [], resolved: [] };
         const generatedChartData = Array.from({ length: 7 }).map((_, i) => {
           const d = new Date();
@@ -134,10 +139,8 @@ export default function DashboardPage() {
           };
         });
         setChartData(generatedChartData);
-
         const totalCreatedThisWeek = generatedChartData.reduce((acc, c) => acc + c.tickets, 0);
         const totalResolvedThisWeek = generatedChartData.reduce((acc, c) => acc + c.resolved, 0);
-
         setStats({
           total: s.total || 0,
           pending: (s.open || 0) + (s.assigned || 0) + (s.in_progress || 0),
@@ -153,7 +156,6 @@ export default function DashboardPage() {
           shiftStats: s.shiftStats || {},
           teamBreakdown: s.teamBreakdown || {},
         });
-
         setRecentTickets(ticketsRes.data.tickets || []);
         setLoading(false);
       } catch (err) {
@@ -163,10 +165,7 @@ export default function DashboardPage() {
     };
 
     const fetchAgents = async () => {
-      try {
-        const res = await userService.getAgents();
-        setAgents(res.data.agents || []);
-      } catch {}
+      try { const res = await userService.getAgents(); setAgents(res.data.agents || []); } catch {}
     };
 
     fetchDashboardData();
@@ -177,7 +176,6 @@ export default function DashboardPage() {
     ? Object.entries(stats.priorityBreakdown).map(([k, v]) => ({ name: k, value: v }))
     : [{ name: "Critical", value: 2 }, { name: "High", value: 8 }, { name: "Medium", value: 15 }, { name: "Low", value: 6 }];
 
-  // ── Loading ───────────────────────────────────────────────────────────
   const Spinner = () => (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", width: "100%", padding: "80px" }}>
       <div className="button-spinner" style={{ width: "32px", height: "32px", borderColor: "var(--primary)", borderTopColor: "transparent" }} />
@@ -191,21 +189,33 @@ export default function DashboardPage() {
     if (loading) return <Spinner />;
     return (
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="page-layout">
+
         {/* Hero */}
-        <div style={{ background: "linear-gradient(135deg, #1E40AF 0%, #0F172A 100%)", padding: "var(--s-8)", borderRadius: "var(--r-xl)", color: "white", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 10px 30px -10px rgba(30,64,175,0.4)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--s-8)", flexWrap: "wrap", gap: "16px" }}>
+        <div style={{
+          background: "linear-gradient(135deg, #1E40AF 0%, #0F172A 100%)",
+          padding: "var(--s-8)", borderRadius: "var(--r-xl)", color: "white",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 10px 30px -10px rgba(30,64,175,0.4)",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          marginBottom: "var(--s-8)", flexWrap: "wrap", gap: "16px",
+          position: "relative",
+        }}>
           <div>
-            <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "white" }}>How can we help, {user?.name?.split(" ")[0] ?? "there"}?</h1>
+            <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "white" }}>
+              How can we help, {user?.name?.split(" ")[0] ?? "there"}?
+            </h1>
             <p style={{ opacity: 0.9 }}>Check the status of your requests or find answers in the knowledge base.</p>
           </div>
-          <Button onClick={() => navigate("/tickets/new")} style={{ background: "white", color: "var(--text-main)", fontWeight: 700 }}>New Support Ticket</Button>
+          {/* Profile Avatar — top right of hero */}
+          <HeroAvatar user={user} onClick={() => navigate("/profile")} />
         </div>
 
         {/* Stat Cards */}
         <div className="dashboard-grid" style={{ marginBottom: "var(--s-8)" }}>
           {[
-            { label: "Active Requests", value: stats?.pending || 0, icon: <Ticket size={24} />, bg: "#EEF2FF", color: "var(--primary)" },
-            { label: "Action Needed", value: stats?.pendingFeedback || 0, icon: <Star size={24} />, bg: "#FFFBEB", color: "var(--warning)", sub: "Resolved tickets waiting for your feedback." },
-            { label: "Successfully Resolved", value: stats?.resolved || 0, icon: <CheckCircle2 size={24} />, bg: "#ECFDF5", color: "var(--success)" },
+            { label: "Active Requests",      value: stats?.pending || 0,         icon: <Ticket size={24} />,       bg: "#EEF2FF", color: "var(--primary)" },
+            { label: "Action Needed",        value: stats?.pendingFeedback || 0, icon: <Star size={24} />,         bg: "#FFFBEB", color: "var(--warning)", sub: "Resolved tickets waiting for your feedback." },
+            { label: "Successfully Resolved",value: stats?.resolved || 0,        icon: <CheckCircle2 size={24} />, bg: "#ECFDF5", color: "var(--success)" },
           ].map((card, i) => (
             <div key={i} className="premium-stat-card" style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -220,7 +230,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Recent tickets table */}
+        {/* Recent Tickets Table */}
         <Card style={{ border: "1px solid var(--border-light)", boxShadow: "var(--shadow-md)", borderRadius: "24px", overflow: "hidden" }}>
           <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--border-light)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
@@ -272,7 +282,14 @@ export default function DashboardPage() {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="page-layout">
 
       {/* Hero */}
-      <div style={{ background: "linear-gradient(135deg, #1E3A8A 0%, #020617 100%)", padding: "var(--s-8)", borderRadius: "var(--r-xl)", color: "white", border: "1px solid rgba(255,255,255,0.05)", boxShadow: "0 10px 30px -10px rgba(30,58,138,0.5)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--s-8)", flexWrap: "wrap", gap: "16px" }}>
+      <div style={{
+        background: "linear-gradient(135deg, #1E3A8A 0%, #020617 100%)",
+        padding: "var(--s-8)", borderRadius: "var(--r-xl)", color: "white",
+        border: "1px solid rgba(255,255,255,0.05)",
+        boxShadow: "0 10px 30px -10px rgba(30,58,138,0.5)",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        marginBottom: "var(--s-8)", flexWrap: "wrap", gap: "16px",
+      }}>
         <div>
           <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "white" }}>
             {isAgent ? `Ready for work, ${user?.name?.split(" ")[0] ?? "there"}?` : "Welcome back, Team!"}
@@ -281,14 +298,23 @@ export default function DashboardPage() {
             {isAgent ? "Here is a summary of your assigned tasks and performance today." : "Here's your support performance overview for today."}
           </p>
         </div>
-        <button style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", backdropFilter: "blur(10px)", padding: "10px 20px", borderRadius: "10px", cursor: "pointer", fontWeight: 600 }}>
-          Download Report
-        </button>
+
+        {/* Right side: Download Report + Profile Avatar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <button style={{
+            background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+            color: "white", backdropFilter: "blur(10px)", padding: "10px 20px",
+            borderRadius: "10px", cursor: "pointer", fontWeight: 600,
+          }}>
+            Download Report
+          </button>
+          {/* Profile Avatar */}
+          <HeroAvatar user={user} onClick={() => navigate("/profile")} />
+        </div>
       </div>
 
-      {/* KPI Cards — 4 cards */}
+      {/* KPI Cards */}
       <div className="dashboard-grid-4" style={{ marginBottom: "var(--s-8)" }}>
-        {/* Total Tickets */}
         <div className="premium-stat-card" style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
@@ -302,7 +328,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Pending */}
         <div className="premium-stat-card" style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
@@ -316,7 +341,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Resolved */}
         <div className="premium-stat-card" style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
@@ -330,7 +354,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* SLA Breached — replaces Avg Resolution */}
         <div className="premium-stat-card" style={{ border: `1px solid ${stats?.slaBreached > 0 ? "#FCA5A5" : "var(--border)"}`, boxShadow: "var(--shadow-sm)", background: stats?.slaBreached > 0 ? "#FFF5F5" : "white" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
@@ -344,13 +367,12 @@ export default function DashboardPage() {
           <div style={{ marginTop: "16px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px", color: stats?.slaBreached > 0 ? "var(--danger)" : "var(--success)", fontWeight: 600 }}>
             {stats?.slaBreached > 0
               ? <><AlertTriangle size={14} /> <span>Needs immediate attention</span></>
-              : <><CheckCircle2 size={14} /> <span>All SLAs on track</span></>
-            }
+              : <><CheckCircle2 size={14} /> <span>All SLAs on track</span></>}
           </div>
         </div>
       </div>
 
-      {/* Admin: Reassignment Requests Alert */}
+      {/* Reassignment Requests Alert */}
       {isAdmin && stats?.pendingReassignRequests > 0 && (
         <div onClick={() => navigate("/tickets")} style={{ marginBottom: "var(--s-8)", padding: "16px 20px", borderRadius: "var(--r-lg)", background: "#FFFBEB", border: "2px dashed var(--warning)", cursor: "pointer", display: "flex", alignItems: "center", gap: "16px" }}>
           <div style={{ background: "white", color: "var(--warning)", width: "40px", height: "40px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--warning)" }}>
@@ -367,10 +389,8 @@ export default function DashboardPage() {
       {/* Main Grid */}
       <div className="premium-dashboard-grid">
 
-        {/* LEFT — Charts + Table */}
+        {/* LEFT */}
         <div className="flex-col" style={{ gap: "24px" }}>
-
-          {/* Charts */}
           <div className="split-grid">
             {/* Line Chart */}
             <div className="premium-card">
@@ -393,9 +413,7 @@ export default function DashboardPage() {
 
             {/* Bar Chart */}
             <div className="premium-card" style={{ marginBottom: 0 }}>
-              <div style={{ marginBottom: "16px" }}>
-                <h3 style={{ fontWeight: 800, fontSize: "1.1rem" }}>Ticket Volume</h3>
-              </div>
+              <div style={{ marginBottom: "16px" }}><h3 style={{ fontWeight: 800, fontSize: "1.1rem" }}>Ticket Volume</h3></div>
               <div style={{ height: "260px" }}>
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={chartData}>
@@ -420,12 +438,7 @@ export default function DashboardPage() {
               <table className="premium-table">
                 <thead>
                   <tr>
-                    <th>Ticket ID</th>
-                    <th>Subject</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th></th>
+                    <th>Ticket ID</th><th>Subject</th><th>Priority</th><th>Status</th><th>Date</th><th></th>
                   </tr>
                 </thead>
                 <tbody>

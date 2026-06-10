@@ -2,20 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Ticket, 
   BookOpen, 
-  User, 
   Users, 
   Bell, 
   Search, 
   Plus, 
-  LogOut, 
   Menu, 
   BarChart2,
   PieChart,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   TrendingUp,
   Zap,
   Ticket as TicketIcon
@@ -25,7 +20,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { useToast } from '../../context/ToastContext';
 import { notificationService, userService } from '../../services/ticketService';
-import { getInitials, getAvatarColor } from '../../utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/dashboard-premium.css';
 
@@ -36,12 +30,10 @@ const NAV_ITEMS = {
   ],
   employee: [
     { path: '/tickets/new', label: 'New Ticket', icon: Plus },
-    { path: '/profile',   label: 'Profile',    icon: User },
   ],
   support_agent: [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/tickets?myTickets=true&status=open,assigned,in_progress,reopened', label: 'My Queue', icon: TrendingUp },
-    { path: '/profile',   label: 'Profile',    icon: User },
   ],
   admin: [
     { path: '/dashboard',  label: 'Dashboard', icon: LayoutDashboard, fa: 'fa-gauge' },
@@ -50,7 +42,6 @@ const NAV_ITEMS = {
     { path: '/analytics',  label: 'Analytics', icon: PieChart,        fa: 'fa-chart-line' },
     { path: '/admin/performance', label: 'Efficiency', icon: Zap,      fa: 'fa-bolt' },
     { path: '/settings',   label: 'Settings',  icon: Settings,        fa: 'fa-gear' },
-    { path: '/profile',    label: 'Profile',   icon: User,            fa: 'fa-user' },
   ]
 };
 
@@ -96,14 +87,12 @@ export default function AppLayout() {
     navItems = [
       NAV_ITEMS.employee[0], // New Ticket
       ...NAV_ITEMS.all,
-      NAV_ITEMS.employee[1]  // Profile
     ];
   } else if (user?.role === 'support_agent') {
     navItems = [
       NAV_ITEMS.support_agent[0], // Dashboard
       ...NAV_ITEMS.all,
       NAV_ITEMS.support_agent[1], // My Queue
-      NAV_ITEMS.support_agent[2]  // Profile
     ];
   } else if (user?.role === 'admin') {
     navItems = [
@@ -168,7 +157,7 @@ export default function AppLayout() {
         </div>
 
         <nav className="premium-nav">
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', paddingLeft: '16px',   }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', paddingLeft: '16px' }}>
             Main Menu
           </div>
           {navItems.map((item) => {
@@ -202,7 +191,7 @@ export default function AppLayout() {
               </NavLink>
             );
           })}
-           <button
+          <button
             onClick={() => navigate('/notifications')}
             className="premium-nav-item"
             style={{
@@ -214,9 +203,7 @@ export default function AppLayout() {
             }}
           >
             <Bell size={20} />
-
             <span>Notifications</span>
-
             {unreadCount > 0 && (
               <span
                 style={{
@@ -238,37 +225,9 @@ export default function AppLayout() {
               </span>
             )}
           </button>
-          
         </nav>
-        <>
-         <div 
-                style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid var(--border)', cursor: 'pointer' }}
-                onClick={() => navigate('/profile')}
-              >
-                <div className="hide-mobile" onClick={() => navigate('/profile')}>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{user?.name || 'User'}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ') || 'Role'}</div>
-                </div>
 
-
-                
-                {/*  
-                <button 
-                  onClick={(e) => { e.stopPropagation(); logout(); }}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', alignItems: 'center', padding: '8px', marginLeft: '12px' }}
-                  title="Logout"
-                >
-                  <LogOut size={20} />
-                </button>
-                */}
-              </div>
-
-              
-        </>
-          
         <div style={{ marginTop: 'auto', padding: '32px 24px', borderTop: '1px solid var(--border-light)' }}>
-              
-
           <button
             className="premium-nav-item"
             onClick={() => { setLoggingOut(true); setTimeout(logout, 800); }}
@@ -279,9 +238,7 @@ export default function AppLayout() {
               ? <><div className="spinner" style={{ borderColor: 'rgba(239,68,68,0.3)', borderTopColor: '#EF4444' }} /><span>Logging out...</span></>
               : <><i className="fa-solid fa-right-from-bracket" style={{ fontSize: '1.2rem' }} /><span>Logout</span></>}
           </button>
-         
         </div>
-        
       </aside>
 
       {/* PREMIUM MAIN WRAPPER */}
@@ -318,11 +275,6 @@ export default function AppLayout() {
                 onMouseEnter={() => setNotifOpen(true)}
                 onMouseLeave={() => setNotifOpen(false)}
               >
-
-
-              {/* thiss notification area  */}
-
-
                 <button 
                   onClick={() => setNotifOpen(!notifOpen)}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)', position: 'relative', padding: '8px' }}
@@ -370,72 +322,108 @@ export default function AppLayout() {
                   )}
                 </AnimatePresence>
               </div>
-             
-              {/* <div 
-                style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid var(--border)', cursor: 'pointer' }}
+
+              {/* Profile Avatar in Navbar */}
+              <div
                 onClick={() => navigate('/profile')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  marginLeft: '16px',
+                  paddingLeft: '16px',
+                  borderLeft: '1px solid var(--border)'
+                }}
               >
-                <div className="hide-mobile" onClick={() => navigate('/profile')}>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{user?.name || 'User'}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ') || 'Role'}</div>
-                </div>
-                {/*  
-                <button 
-                  onClick={(e) => { e.stopPropagation(); logout(); }}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', alignItems: 'center', padding: '8px', marginLeft: '12px' }}
-                  title="Logout"
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    background: '#1F4E79',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '700',
+                    overflow: 'hidden'
+                  }}
                 >
-                  <LogOut size={20} />
-                </button>
-                
-              </div> */}
-
-               
-             
-
-               {/* Status Toggle for Agents/Admins */}
-               {(user?.role === 'support_agent' || user?.role === 'admin') && (
-                 <div style={{ position: 'relative', marginLeft: '8px' }}>
-                    <div 
-                      className={user?.role === 'admin' ? 'status-toggle-active' : ''}
-                      style={{ 
-                        padding: '4px 12px', borderRadius: '20px', 
-                        background: 'var(--bg)', border: '1px solid var(--border)',
-                        display: 'flex', alignItems: 'center', gap: '8px', 
-                        cursor: user?.role === 'admin' ? 'pointer' : 'default',
-                        transition: 'all 0.2s ease',
-                        opacity: user?.role === 'admin' ? 1 : 0.9
+                  {user?.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt="Profile"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
                       }}
-                      onClick={(e) => {
-                        if (user?.role !== 'admin') return;
-                       const rect = e.currentTarget.getBoundingClientRect();
-                       const statusMap = {
-                         available: { label: 'Available', color: '#10B981' },
-                         on_site: { label: 'On-Site', color: '#3B82F6' },
-                         remote: { label: 'Remote', color: '#F59E0B' },
-                         unavailable: { label: 'Away', color: '#EF4444' }
-                       };
-                       const statuses = ['available', 'on_site', 'remote', 'unavailable'];
-                       const currentIdx = statuses.indexOf(user?.liveStatus || 'available');
-                       const nextStatus = statuses[(currentIdx + 1) % statuses.length];
-                       
-                       userService.updateLiveStatus({ status: nextStatus })
-                         .then(res => {
-                           updateUser({ liveStatus: res.data.status });
-                           toast.success(`Status updated to ${nextStatus.replace('_', ' ')}`);
-                         })
-                         .catch(err => toast.error(err.response?.data?.message || 'Failed to update status'));
-                     }}
-                   >
-                     <div style={{ 
-                       width: '8px', height: '8px', borderRadius: '50%', 
-                       background: ({ available: '#10B981', on_site: '#3B82F6', remote: '#F59E0B', unavailable: '#EF4444' })[user?.liveStatus || 'available'],
-                       boxShadow: `0 0 8px ${({ available: '#10B981', on_site: '#3B82F6', remote: '#F59E0B', unavailable: '#EF4444' })[user?.liveStatus || 'available']}88`
-                     }} />
-                     <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>
-                        {({ available: 'Available', on_site: 'On-Site', remote: 'Remote', unavailable: 'Away' })[user?.liveStatus || 'available']}
-                     </span>
-                   </div>
+                    />
+                  ) : (
+                    user?.name?.charAt(0)?.toUpperCase() || 'U'
+                  )}
+                </div>
+
+                <div className="hide-mobile">
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: 'var(--text)'
+                    }}
+                  >
+                    {user?.name || 'User'}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: 'var(--muted)',
+                      textTransform: 'capitalize'
+                    }}
+                  >
+                    {user?.role?.replace('_', ' ') || 'Employee'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Toggle for Agents/Admins */}
+              {(user?.role === 'support_agent' || user?.role === 'admin') && (
+                <div style={{ position: 'relative', marginLeft: '8px' }}>
+                  <div 
+                    className={user?.role === 'admin' ? 'status-toggle-active' : ''}
+                    style={{ 
+                      padding: '4px 12px', borderRadius: '20px', 
+                      background: 'var(--bg)', border: '1px solid var(--border)',
+                      display: 'flex', alignItems: 'center', gap: '8px', 
+                      cursor: user?.role === 'admin' ? 'pointer' : 'default',
+                      transition: 'all 0.2s ease',
+                      opacity: user?.role === 'admin' ? 1 : 0.9
+                    }}
+                    onClick={(e) => {
+                      if (user?.role !== 'admin') return;
+                      const statuses = ['available', 'on_site', 'remote', 'unavailable'];
+                      const currentIdx = statuses.indexOf(user?.liveStatus || 'available');
+                      const nextStatus = statuses[(currentIdx + 1) % statuses.length];
+                      
+                      userService.updateLiveStatus({ status: nextStatus })
+                        .then(res => {
+                          updateUser({ liveStatus: res.data.status });
+                          toast.success(`Status updated to ${nextStatus.replace('_', ' ')}`);
+                        })
+                        .catch(err => toast.error(err.response?.data?.message || 'Failed to update status'));
+                    }}
+                  >
+                    <div style={{ 
+                      width: '8px', height: '8px', borderRadius: '50%', 
+                      background: ({ available: '#10B981', on_site: '#3B82F6', remote: '#F59E0B', unavailable: '#EF4444' })[user?.liveStatus || 'available'],
+                      boxShadow: `0 0 8px ${({ available: '#10B981', on_site: '#3B82F6', remote: '#F59E0B', unavailable: '#EF4444' })[user?.liveStatus || 'available']}88`
+                    }} />
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                      {({ available: 'Available', on_site: 'On-Site', remote: 'Remote', unavailable: 'Away' })[user?.liveStatus || 'available']}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
