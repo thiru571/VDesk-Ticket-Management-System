@@ -2,8 +2,19 @@ import { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  Mail, Camera, Upload, X, RotateCcw, CheckCircle2,
-  Shield, Bell, Key, Monitor, Settings, ChevronRight, LogOut,
+  Mail,
+  Camera,
+  Upload,
+  X,
+  RotateCcw,
+  CheckCircle2,
+  Shield,
+  Bell,
+  Key,
+  Monitor,
+  Settings,
+  ChevronRight,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -13,28 +24,77 @@ import { Card, Button, Input, Badge } from "../ui";
 import { motion, AnimatePresence } from "framer-motion";
 
 const INDIAN_STATES = [
-  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh",
-  "Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka",
-  "Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram",
-  "Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu",
-  "Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal",
-  "Andaman and Nicobar Islands","Chandigarh",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
   "Dadra and Nagar Haveli and Daman and Diu",
-  "Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
 ];
 
 const menuItemStyle = {
-  display: "flex", alignItems: "center", justifyContent: "space-between",
-  width: "100%", padding: "10px 14px", border: "none",
-  background: "transparent", borderRadius: "10px", cursor: "pointer",
-  fontSize: "0.875rem", fontWeight: 500, color: "var(--text-main)",
-  transition: "background 0.15s", textAlign: "left",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "100%",
+  padding: "10px 14px",
+  border: "none",
+  background: "transparent",
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontSize: "0.875rem",
+  fontWeight: 500,
+  color: "var(--text-main)",
+  transition: "background 0.15s",
+  textAlign: "left",
 };
 
 function SettingsDropdown({ onSelect, onClose, onSignOut }) {
   const items = [
-    { id: "security",      label: "Security & Auth", icon: Shield, color: "#2563EB", bg: "#DBEAFE" },
-    { id: "notifications", label: "Notifications",   icon: Bell,   color: "#7C3AED", bg: "#EDE9FE" },
+    {
+      id: "security",
+      label: "Security & Auth",
+      icon: Shield,
+      color: "#2563EB",
+      bg: "#DBEAFE",
+    },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: Bell,
+      color: "#7C3AED",
+      bg: "#EDE9FE",
+    },
   ];
   return (
     <motion.div
@@ -43,18 +103,60 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -6 }}
       transition={{ duration: 0.15 }}
-      style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "white", border: "1px solid var(--border)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", padding: "8px", zIndex: 9999, minWidth: "220px" }}
+      style={{
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        right: 0,
+        background: "white",
+        border: "1px solid var(--border)",
+        borderRadius: "14px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+        padding: "8px",
+        zIndex: 9999,
+        minWidth: "220px",
+      }}
     >
-      <p style={{ padding: "6px 14px 8px", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)", borderBottom: "1px solid var(--border-light)", marginBottom: "6px" }}>
+      <p
+        style={{
+          padding: "6px 14px 8px",
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: "var(--text-dim)",
+          borderBottom: "1px solid var(--border-light)",
+          marginBottom: "6px",
+        }}
+      >
         Settings
       </p>
       {items.map(({ id, label, icon: Icon, color, bg }) => (
-        <button key={id} onClick={() => { onSelect(id); onClose(); }} style={menuItemStyle}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        <button
+          key={id}
+          onClick={() => {
+            onSelect(id);
+            onClose();
+          }}
+          style={menuItemStyle}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "var(--surface-alt)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "transparent")
+          }
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "8px",
+                background: bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Icon size={14} color={color} />
             </div>
             {label}
@@ -62,13 +164,36 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
           <ChevronRight size={14} color="var(--text-dim)" />
         </button>
       ))}
-      <div style={{ borderTop: "1px solid var(--border-light)", marginTop: "6px", paddingTop: "6px" }}>
-        <button onClick={() => { onSignOut(); onClose(); }} style={{ ...menuItemStyle, color: "#DC2626" }}
+      <div
+        style={{
+          borderTop: "1px solid var(--border-light)",
+          marginTop: "6px",
+          paddingTop: "6px",
+        }}
+      >
+        <button
+          onClick={() => {
+            onSignOut();
+            onClose();
+          }}
+          style={{ ...menuItemStyle, color: "#DC2626" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#FEF2F2")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "transparent")
+          }
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#FEE2E2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "8px",
+                background: "#FEE2E2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <LogOut size={14} color="#DC2626" />
             </div>
             Sign Out
@@ -79,29 +204,79 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
   );
 }
 
-function AvatarUploadMenu({ anchorRef, hasAvatar, onUpload, onCamera, onRemove }) {
+function AvatarUploadMenu({
+  anchorRef,
+  hasAvatar,
+  onUpload,
+  onCamera,
+  onRemove,
+}) {
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   useEffect(() => {
     if (anchorRef?.current) {
       const rect = anchorRef.current.getBoundingClientRect();
-      setCoords({ top: rect.bottom + window.scrollY + 8, left: rect.left + window.scrollX + rect.width / 2 });
+      setCoords({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX + rect.width / 2,
+      });
     }
   }, [anchorRef]);
   return ReactDOM.createPortal(
-    <motion.div data-avatar-menu="true"
-      initial={{ opacity: 0, scale: 0.92, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.92, y: -6 }} transition={{ duration: 0.15 }}
-      style={{ position: "absolute", top: coords.top, left: coords.left, transform: "translateX(-50%)", background: "white", border: "1px solid var(--border)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "8px", zIndex: 9999, minWidth: "210px" }}
+    <motion.div
+      data-avatar-menu="true"
+      initial={{ opacity: 0, scale: 0.92, y: -6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: -6 }}
+      transition={{ duration: 0.15 }}
+      style={{
+        position: "absolute",
+        top: coords.top,
+        left: coords.left,
+        transform: "translateX(-50%)",
+        background: "white",
+        border: "1px solid var(--border)",
+        borderRadius: "14px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        padding: "8px",
+        zIndex: 9999,
+        minWidth: "210px",
+      }}
     >
-      <button onClick={onUpload} style={menuItemStyle} onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><Upload size={16} /><span>Upload from computer</span></div>
+      <button
+        onClick={onUpload}
+        style={menuItemStyle}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = "var(--surface-alt)")
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Upload size={16} />
+          <span>Upload from computer</span>
+        </div>
       </button>
-      <button onClick={onCamera} style={menuItemStyle} onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><Camera size={16} /><span>Take a photo</span></div>
+      <button
+        onClick={onCamera}
+        style={menuItemStyle}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = "var(--surface-alt)")
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Camera size={16} />
+          <span>Take a photo</span>
+        </div>
       </button>
       {hasAvatar && (
-        <button onClick={onRemove} style={{ ...menuItemStyle, color: "var(--danger)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><X size={16} /><span>Remove photo</span></div>
+        <button
+          onClick={onRemove}
+          style={{ ...menuItemStyle, color: "var(--danger)" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <X size={16} />
+            <span>Remove photo</span>
+          </div>
         </button>
       )}
     </motion.div>,
@@ -116,58 +291,198 @@ function CameraModal({ onCapture, onClose }) {
   const [captured, setCaptured] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => { startCamera(); return () => stopCamera(); }, []);
+  useEffect(() => {
+    startCamera();
+    return () => stopCamera();
+  }, []);
 
   const startCamera = async () => {
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+      });
       setStream(s);
-      if (videoRef.current) { videoRef.current.srcObject = s; videoRef.current.onloadedmetadata = () => videoRef.current.play(); }
-    } catch (err) { setError(err.message || "Camera access denied."); }
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+        videoRef.current.onloadedmetadata = () => videoRef.current.play();
+      }
+    } catch (err) {
+      setError(err.message || "Camera access denied.");
+    }
   };
   const stopCamera = () => stream?.getTracks().forEach((t) => t.stop());
   const handleCapture = () => {
-    const v = videoRef.current, c = canvasRef.current;
-    c.width = v.videoWidth; c.height = v.videoHeight;
+    const v = videoRef.current,
+      c = canvasRef.current;
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
     c.getContext("2d").drawImage(v, 0, 0);
-    setCaptured(c.toDataURL("image/jpeg", 0.9)); stopCamera();
+    setCaptured(c.toDataURL("image/jpeg", 0.9));
+    stopCamera();
   };
-  const handleRetake = () => { setCaptured(null); startCamera(); };
+  const handleRetake = () => {
+    setCaptured(null);
+    startCamera();
+  };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}
-      onClick={(e) => { if (e.target === e.currentTarget) { stopCamera(); onClose(); } }}>
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-        style={{ background: "white", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "480px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h3 style={{ fontWeight: 700, fontSize: "1.1rem", margin: 0 }}>Take a Photo</h3>
-          <button onClick={() => { stopCamera(); onClose(); }} style={{ border: "none", background: "var(--surface-alt)", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          stopCamera();
+          onClose();
+        }
+      }}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        style={{
+          background: "white",
+          borderRadius: "20px",
+          padding: "24px",
+          width: "100%",
+          maxWidth: "480px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
+          <h3 style={{ fontWeight: 700, fontSize: "1.1rem", margin: 0 }}>
+            Take a Photo
+          </h3>
+          <button
+            onClick={() => {
+              stopCamera();
+              onClose();
+            }}
+            style={{
+              border: "none",
+              background: "var(--surface-alt)",
+              borderRadius: "50%",
+              width: "32px",
+              height: "32px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <X size={16} />
           </button>
         </div>
         {error ? (
-          <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-dim)" }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px 20px",
+              color: "var(--text-dim)",
+            }}
+          >
             <Camera size={40} style={{ marginBottom: "12px", opacity: 0.4 }} />
             <p style={{ fontSize: "0.9rem" }}>{error}</p>
           </div>
         ) : (
           <>
-            <div style={{ borderRadius: "14px", overflow: "hidden", background: "#000", aspectRatio: "4/3" }}>
-              {!captured
-                ? <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
-                : <img src={captured} alt="Captured" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+            <div
+              style={{
+                borderRadius: "14px",
+                overflow: "hidden",
+                background: "#000",
+                aspectRatio: "4/3",
+              }}
+            >
+              {!captured ? (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    transform: "scaleX(-1)",
+                  }}
+                />
+              ) : (
+                <img
+                  src={captured}
+                  alt="Captured"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              )}
             </div>
             <canvas ref={canvasRef} style={{ display: "none" }} />
-            <div style={{ display: "flex", gap: "12px", marginTop: "16px", justifyContent: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                marginTop: "16px",
+                justifyContent: "center",
+              }}
+            >
               {!captured ? (
-                <button onClick={handleCapture} style={{ width: "64px", height: "64px", borderRadius: "50%", border: "4px solid var(--primary)", background: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "var(--primary)" }} />
+                <button
+                  onClick={handleCapture}
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "50%",
+                    border: "4px solid var(--primary)",
+                    background: "white",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "44px",
+                      height: "44px",
+                      borderRadius: "50%",
+                      background: "var(--primary)",
+                    }}
+                  />
                 </button>
               ) : (
                 <>
-                  <Button variant="outline" leftIcon={<RotateCcw size={16} />} onClick={handleRetake}>Retake</Button>
-                  <Button onClick={() => { onCapture(captured); onClose(); }} leftIcon={<CheckCircle2 size={16} />}>Use Photo</Button>
+                  <Button
+                    variant="outline"
+                    leftIcon={<RotateCcw size={16} />}
+                    onClick={handleRetake}
+                  >
+                    Retake
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      onCapture(captured);
+                      onClose();
+                    }}
+                    leftIcon={<CheckCircle2 size={16} />}
+                  >
+                    Use Photo
+                  </Button>
                 </>
               )}
             </div>
@@ -182,46 +497,59 @@ function CameraModal({ onCapture, onClose }) {
 function buildProfileFromUser(user) {
   const parts = (user?.name || "").split(" ");
   return {
-    firstName:        parts[0] || "",
-    lastName:         parts.slice(1).join(" ") || "",
-    phone:            user?.phone            || "",
-    designation:      user?.designation      || "",
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" ") || "",
+    phone: user?.phone || "",
+    designation: user?.designation || "",
     preferredContact: user?.preferredContact || "email",
     location: {
       address1: user?.location?.address1 || "",
       address2: user?.location?.address2 || "",
-      city:     user?.location?.city     || "",
+      city: user?.location?.city || "",
       district: user?.location?.district || "",
-      state:    user?.location?.state    || "",
-      pincode:  user?.location?.pincode  || "",
+      state: user?.location?.state || "",
+      pincode: user?.location?.pincode || "",
     },
   };
 }
 
 const PAGE_CONFIG = {
-  profile:       { title: "Basic Profile",             subtitle: "Update your account information and preferences." },
-  security:      { title: "Security & Authentication", subtitle: "Manage your password, 2FA, and active sessions." },
-  notifications: { title: "Notification Preferences", subtitle: "Manage how and when you receive updates about your tickets." },
+  profile: {
+    title: "Basic Profile",
+    subtitle: "Update your account information and preferences.",
+  },
+  security: {
+    title: "Security & Authentication",
+    subtitle: "Manage your password, 2FA, and active sessions.",
+  },
+  notifications: {
+    title: "Notification Preferences",
+    subtitle: "Manage how and when you receive updates about your tickets.",
+  },
 };
 
 export default function ProfilePage() {
   const { user, updateUser, logout } = useAuth();
-  const toast  = useToast();
+  const toast = useToast();
   const navigate = useNavigate();
 
-  const [activeView,       setActiveView]       = useState("profile");
-  const [loading,          setLoading]          = useState(false);
-  const [avatarUrl,        setAvatarUrl]        = useState(user?.avatar || null);
-  const [showAvatarMenu,   setShowAvatarMenu]   = useState(false);
-  const [showCameraModal,  setShowCameraModal]  = useState(false);
+  const [activeView, setActiveView] = useState("profile");
+  const [loading, setLoading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || null);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
-  const [profile,   setProfile]   = useState(() => buildProfileFromUser(user));
-  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [profile, setProfile] = useState(() => buildProfileFromUser(user));
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  const fileInputRef      = useRef(null);
-  const cameraButtonRef   = useRef(null);
-  const avatarMenuRef     = useRef(null);
+  const fileInputRef = useRef(null);
+  const cameraButtonRef = useRef(null);
+  const avatarMenuRef = useRef(null);
   const settingsButtonRef = useRef(null);
 
   // ── KEY FIX: re-sync form whenever auth `user` changes (after save OR refresh) ──
@@ -236,12 +564,18 @@ export default function ProfilePage() {
     const handler = (e) => {
       if (e.target.closest("[data-avatar-menu]")) return;
       if (
-        avatarMenuRef.current && !avatarMenuRef.current.contains(e.target) &&
-        cameraButtonRef.current && !cameraButtonRef.current.contains(e.target)
-      ) setShowAvatarMenu(false);
+        avatarMenuRef.current &&
+        !avatarMenuRef.current.contains(e.target) &&
+        cameraButtonRef.current &&
+        !cameraButtonRef.current.contains(e.target)
+      )
+        setShowAvatarMenu(false);
 
       if (e.target.closest("[data-settings-menu]")) return;
-      if (settingsButtonRef.current && !settingsButtonRef.current.contains(e.target))
+      if (
+        settingsButtonRef.current &&
+        !settingsButtonRef.current.contains(e.target)
+      )
         setShowSettingsMenu(false);
     };
     document.addEventListener("mousedown", handler);
@@ -263,12 +597,19 @@ export default function ProfilePage() {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return; }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = async (event) => {
       const dataUrl = event.target.result;
       setAvatarUrl(dataUrl);
-      try { await uploadAvatar(dataUrl); } catch { toast.error("Upload failed"); }
+      try {
+        await uploadAvatar(dataUrl);
+      } catch {
+        toast.error("Upload failed");
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = "";
@@ -324,7 +665,11 @@ export default function ProfilePage() {
         newPassword: passwords.newPassword,
       });
       toast.success("Password changed successfully");
-      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswords({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
     } catch (err) {
       toast.error(err.response?.data?.message || "Password change failed");
     } finally {
@@ -332,23 +677,66 @@ export default function ProfilePage() {
     }
   };
 
-  const handleForgotPassword = (e) => { e.preventDefault(); e.stopPropagation(); navigate("/forgot-password"); };
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate("/forgot-password");
+  };
 
   const { title, subtitle } = PAGE_CONFIG[activeView];
 
   const cardHeader = (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: "var(--s-4)",
+        background: "white",
+        border: "1px solid var(--border)",
+        borderRadius: "16px",
+        padding: "20px 24px",
+      }}
+    >
       <div>
-        <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>{title}</h2>
-        <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>{subtitle}</p>
+        <h2
+          style={{
+            fontWeight: 700,
+            fontSize: "1.1rem",
+            marginBottom: "4px",
+            color: "var(--text-main)",
+          }}
+        >
+          {title}
+        </h2>
+        <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>
+          {subtitle}
+        </p>
       </div>
       {activeView === "profile" && (
         <div style={{ position: "relative" }}>
-          <button ref={settingsButtonRef} onClick={() => setShowSettingsMenu((v) => !v)}
-            style={{ width: "36px", height: "36px", borderRadius: "10px", border: "1px solid var(--border)", background: showSettingsMenu ? "var(--surface-alt)" : "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", color: showSettingsMenu ? "var(--primary)" : "var(--text-dim)" }}
+          <button
+            ref={settingsButtonRef}
+            onClick={() => setShowSettingsMenu((v) => !v)}
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              border: "1px solid var(--border)",
+              background: showSettingsMenu ? "var(--surface-alt)" : "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.15s",
+              color: showSettingsMenu ? "var(--primary)" : "var(--text-dim)",
+            }}
             title="Settings"
           >
-            <motion.div animate={{ rotate: showSettingsMenu ? 45 : 0 }} transition={{ duration: 0.2 }}>
+            <motion.div
+              animate={{ rotate: showSettingsMenu ? 45 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
               <Settings size={16} />
             </motion.div>
           </button>
@@ -357,7 +745,10 @@ export default function ProfilePage() {
               <SettingsDropdown
                 onSelect={(id) => setActiveView(id)}
                 onClose={() => setShowSettingsMenu(false)}
-                onSignOut={() => { logout(); navigate("/login"); }}
+                onSignOut={() => {
+                  logout();
+                  navigate("/login");
+                }}
               />
             )}
           </AnimatePresence>
@@ -368,31 +759,106 @@ export default function ProfilePage() {
 
   return (
     <>
-      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        style={{ display: "none" }}
+      />
       <AnimatePresence>
-        {showCameraModal && <CameraModal onCapture={handleCameraCapture} onClose={() => setShowCameraModal(false)} />}
+        {showCameraModal && (
+          <CameraModal
+            onCapture={handleCameraCapture}
+            onClose={() => setShowCameraModal(false)}
+          />
+        )}
       </AnimatePresence>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="page-layout">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="page-layout"
+      >
         <AnimatePresence mode="wait">
-
           {/* ── General Info ── */}
           {activeView === "profile" && (
-            <motion.div key="profile" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+            <motion.div
+              key="profile"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              {cardHeader}
               <Card>
-                {cardHeader}
                 <form onSubmit={handleUpdateProfile} className="flex-col gap-6">
-
                   {/* Avatar + User Summary */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px", paddingBottom: "var(--s-6)", borderBottom: "1px solid var(--border-light)" }}>
-                    <div ref={avatarMenuRef} style={{ position: "relative", flexShrink: 0 }}>
-                      <div style={{ width: "72px", height: "72px", borderRadius: "50%", border: "2px solid #4F7CFF", overflow: "hidden", background: avatarUrl ? "transparent" : getAvatarColor(user?.name), color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "1.2rem" }}>
-                        {avatarUrl
-                          ? <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          : getInitials(user?.name)}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      paddingBottom: "var(--s-6)",
+                      borderBottom: "1px solid var(--border-light)",
+                    }}
+                  >
+                    <div
+                      ref={avatarMenuRef}
+                      style={{ position: "relative", flexShrink: 0 }}
+                    >
+                      <div
+                        style={{
+                          width: "72px",
+                          height: "72px",
+                          borderRadius: "50%",
+                          border: "2px solid #4F7CFF",
+                          overflow: "hidden",
+                          background: avatarUrl
+                            ? "transparent"
+                            : getAvatarColor(user?.name),
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          fontSize: "1.2rem",
+                        }}
+                      >
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt="Profile"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          getInitials(user?.name)
+                        )}
                       </div>
-                      <button type="button" ref={cameraButtonRef} onClick={() => setShowAvatarMenu((v) => !v)}
-                        style={{ position: "absolute", bottom: "-2px", right: "-2px", width: "24px", height: "24px", borderRadius: "50%", border: "2px solid white", background: "#4F46E5", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <button
+                        type="button"
+                        ref={cameraButtonRef}
+                        onClick={() => setShowAvatarMenu((v) => !v)}
+                        style={{
+                          position: "absolute",
+                          bottom: "-2px",
+                          right: "-2px",
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          border: "2px solid white",
+                          background: "#4F46E5",
+                          color: "#fff",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
                         <Camera size={12} />
                       </button>
                       <AnimatePresence>
@@ -400,35 +866,110 @@ export default function ProfilePage() {
                           <AvatarUploadMenu
                             anchorRef={cameraButtonRef}
                             hasAvatar={!!avatarUrl}
-                            onUpload={() => { setShowAvatarMenu(false); setTimeout(() => fileInputRef.current?.click(), 150); }}
-                            onCamera={() => { setShowAvatarMenu(false); setTimeout(() => setShowCameraModal(true), 150); }}
+                            onUpload={() => {
+                              setShowAvatarMenu(false);
+                              setTimeout(
+                                () => fileInputRef.current?.click(),
+                                150,
+                              );
+                            }}
+                            onCamera={() => {
+                              setShowAvatarMenu(false);
+                              setTimeout(() => setShowCameraModal(true), 150);
+                            }}
                             onRemove={handleRemoveAvatar}
                           />
                         )}
                       </AnimatePresence>
                     </div>
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                        <span style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--text-main)" }}>{user?.name}</span>
-                        <Badge style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: "10px", padding: "3px 8px", borderRadius: "999px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            fontSize: "1.1rem",
+                            color: "var(--text-main)",
+                          }}
+                        >
+                          {user?.name}
+                        </span>
+                        <Badge
+                          style={{
+                            background: "#EEF2FF",
+                            color: "#4F46E5",
+                            fontSize: "10px",
+                            padding: "3px 8px",
+                            borderRadius: "999px",
+                          }}
+                        >
                           {user?.role?.toUpperCase()}
                         </Badge>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "var(--text-dim)", fontSize: "0.85rem" }}>
-                        <Mail size={13} />{user?.email}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          color: "var(--text-dim)",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        <Mail size={13} />
+                        {user?.email}
                       </div>
                     </div>
                   </div>
 
                   {/* Fields */}
                   <div className="form-grid-2">
-                    <Input label="First Name"   value={profile.firstName}   onChange={(e) => setProfile({ ...profile, firstName: e.target.value })} />
-                    <Input label="Last Name"    value={profile.lastName}    onChange={(e) => setProfile({ ...profile, lastName: e.target.value })} />
-                    <Input label="Designation"  value={profile.designation} onChange={(e) => setProfile({ ...profile, designation: e.target.value })} />
-                    <Input label="Phone Number" placeholder="+91 00000 00000" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+                    <Input
+                      label="First Name"
+                      value={profile.firstName}
+                      onChange={(e) =>
+                        setProfile({ ...profile, firstName: e.target.value })
+                      }
+                    />
+                    <Input
+                      label="Last Name"
+                      value={profile.lastName}
+                      onChange={(e) =>
+                        setProfile({ ...profile, lastName: e.target.value })
+                      }
+                    />
+                    <Input
+                      label="Designation"
+                      value={profile.designation}
+                      onChange={(e) =>
+                        setProfile({ ...profile, designation: e.target.value })
+                      }
+                    />
+                    <Input
+                      label="Phone Number"
+                      placeholder="+91 00000 00000"
+                      value={profile.phone}
+                      onChange={(e) =>
+                        setProfile({ ...profile, phone: e.target.value })
+                      }
+                    />
                     <div className="input-group">
                       <label className="input-label">Preferred Contact</label>
-                      <select className="input" value={profile.preferredContact} onChange={(e) => setProfile({ ...profile, preferredContact: e.target.value })}>
+                      <select
+                        className="input"
+                        value={profile.preferredContact}
+                        onChange={(e) =>
+                          setProfile({
+                            ...profile,
+                            preferredContact: e.target.value,
+                          })
+                        }
+                      >
                         <option value="email">Email Address</option>
                         <option value="phone">Phone Call</option>
                         <option value="slack">Slack Message</option>
@@ -437,38 +978,195 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Work Location */}
-                  <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: "var(--s-6)" }}>
-                    <h4 style={{ marginBottom: "var(--s-4)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--primary)" }}>
+                  <div
+                    style={{
+                      borderTop: "1px solid var(--border-light)",
+                      paddingTop: "var(--s-6)",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        marginBottom: "var(--s-4)",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        color: "var(--primary)",
+                      }}
+                    >
                       Work Location
                     </h4>
                     <div className="flex-col gap-4">
                       <div className="form-grid-2">
-                        <Input label={<>Address 1 <span style={{ color: "var(--danger)" }}>*</span></>} placeholder="Street address, P.O. box" value={profile.location.address1} onChange={(e) => setProfile({ ...profile, location: { ...profile.location, address1: e.target.value } })} />
-                        <Input label={<>Address 2 <span style={{ color: "var(--text-dim)", fontWeight: 400 }}>(Optional)</span></>} placeholder="Apartment, suite, unit, building, floor, etc." value={profile.location.address2} onChange={(e) => setProfile({ ...profile, location: { ...profile.location, address2: e.target.value } })} />
+                        <Input
+                          label={
+                            <>
+                              Address 1{" "}
+                              <span style={{ color: "var(--danger)" }}>*</span>
+                            </>
+                          }
+                          placeholder="Street address, P.O. box"
+                          value={profile.location.address1}
+                          onChange={(e) =>
+                            setProfile({
+                              ...profile,
+                              location: {
+                                ...profile.location,
+                                address1: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                        <Input
+                          label={
+                            <>
+                              Address 2{" "}
+                              <span
+                                style={{
+                                  color: "var(--text-dim)",
+                                  fontWeight: 400,
+                                }}
+                              >
+                                (Optional)
+                              </span>
+                            </>
+                          }
+                          placeholder="Apartment, suite, unit, building, floor, etc."
+                          value={profile.location.address2}
+                          onChange={(e) =>
+                            setProfile({
+                              ...profile,
+                              location: {
+                                ...profile.location,
+                                address2: e.target.value,
+                              },
+                            })
+                          }
+                        />
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "var(--s-4)" }}>
-                        <Input label={<>City <span style={{ color: "var(--danger)" }}>*</span></>} placeholder="City" value={profile.location.city} onChange={(e) => setProfile({ ...profile, location: { ...profile.location, city: e.target.value } })} />
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                          gap: "var(--s-4)",
+                        }}
+                      >
+                        <Input
+                          label={
+                            <>
+                              City{" "}
+                              <span style={{ color: "var(--danger)" }}>*</span>
+                            </>
+                          }
+                          placeholder="City"
+                          value={profile.location.city}
+                          onChange={(e) =>
+                            setProfile({
+                              ...profile,
+                              location: {
+                                ...profile.location,
+                                city: e.target.value,
+                              },
+                            })
+                          }
+                        />
                         <div className="input-group">
-                          <label className="input-label">District <span style={{ color: "var(--danger)" }}>*</span></label>
-                          <select className="input" value={profile.location.district} onChange={(e) => setProfile({ ...profile, location: { ...profile.location, district: e.target.value } })}>
+                          <label className="input-label">
+                            District{" "}
+                            <span style={{ color: "var(--danger)" }}>*</span>
+                          </label>
+                          <select
+                            className="input"
+                            value={profile.location.district}
+                            onChange={(e) =>
+                              setProfile({
+                                ...profile,
+                                location: {
+                                  ...profile.location,
+                                  district: e.target.value,
+                                },
+                              })
+                            }
+                          >
                             <option value="">Select District</option>
-                            {["Chennai","Coimbatore","Madurai","Salem","Trichy","Bengaluru Urban","Mumbai City","Hyderabad","Pune","Other"].map(d => <option key={d} value={d}>{d}</option>)}
+                            {[
+                              "Chennai",
+                              "Coimbatore",
+                              "Madurai",
+                              "Salem",
+                              "Trichy",
+                              "Bengaluru Urban",
+                              "Mumbai City",
+                              "Hyderabad",
+                              "Pune",
+                              "Other",
+                            ].map((d) => (
+                              <option key={d} value={d}>
+                                {d}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div className="input-group">
-                          <label className="input-label">State <span style={{ color: "var(--danger)" }}>*</span></label>
-                          <select className="input" value={profile.location.state} onChange={(e) => setProfile({ ...profile, location: { ...profile.location, state: e.target.value } })}>
+                          <label className="input-label">
+                            State{" "}
+                            <span style={{ color: "var(--danger)" }}>*</span>
+                          </label>
+                          <select
+                            className="input"
+                            value={profile.location.state}
+                            onChange={(e) =>
+                              setProfile({
+                                ...profile,
+                                location: {
+                                  ...profile.location,
+                                  state: e.target.value,
+                                },
+                              })
+                            }
+                          >
                             <option value="">Select State</option>
-                            {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                            {INDIAN_STATES.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
                           </select>
                         </div>
-                        <Input label={<>Pincode <span style={{ color: "var(--danger)" }}>*</span></>} placeholder="6-digit code" maxLength={6} value={profile.location.pincode} onChange={(e) => setProfile({ ...profile, location: { ...profile.location, pincode: e.target.value.replace(/\D/g, "") } })} />
+                        <Input
+                          label={
+                            <>
+                              Pincode{" "}
+                              <span style={{ color: "var(--danger)" }}>*</span>
+                            </>
+                          }
+                          placeholder="6-digit code"
+                          maxLength={6}
+                          value={profile.location.pincode}
+                          onChange={(e) =>
+                            setProfile({
+                              ...profile,
+                              location: {
+                                ...profile.location,
+                                pincode: e.target.value.replace(/\D/g, ""),
+                              },
+                            })
+                          }
+                        />
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "var(--s-4)" }}>
-                    <Button type="submit" isLoading={loading}>Save Updates</Button>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: "var(--s-4)",
+                    }}
+                  >
+                    <Button type="submit" isLoading={loading}>
+                      Save Updates
+                    </Button>
                   </div>
                 </form>
               </Card>
@@ -477,72 +1175,299 @@ export default function ProfilePage() {
 
           {/* ── Security & Auth ── */}
           {activeView === "security" && (
-            <motion.div key="security" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+            <motion.div
+              key="security"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
               <Card style={{ marginBottom: "24px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "var(--s-6)",
+                  }}
+                >
                   <div>
-                    <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>Security & Authentication</h2>
-                    <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>Manage your password, 2FA, and active sessions.</p>
+                    <h2
+                      style={{
+                        fontWeight: 700,
+                        fontSize: "1.1rem",
+                        marginBottom: "4px",
+                        color: "var(--text-main)",
+                      }}
+                    >
+                      Security & Authentication
+                    </h2>
+                    <p
+                      style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}
+                    >
+                      Manage your password, 2FA, and active sessions.
+                    </p>
                   </div>
-                  <button onClick={() => setActiveView("profile")}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", borderRadius: "10px", border: "1px solid var(--border)", background: "white", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-dim)", transition: "all 0.15s" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-alt)"; e.currentTarget.style.color = "var(--text-main)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "var(--text-dim)"; }}
-                  >← Back</button>
+                  <button
+                    onClick={() => setActiveView("profile")}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid var(--border)",
+                      background: "white",
+                      cursor: "pointer",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      color: "var(--text-dim)",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--surface-alt)";
+                      e.currentTarget.style.color = "var(--text-main)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "white";
+                      e.currentTarget.style.color = "var(--text-dim)";
+                    }}
+                  >
+                    ← Back
+                  </button>
                 </div>
                 <div className="flex-col gap-5">
-                  <Input type="password" label="Current Password" placeholder="••••••••" value={passwords.currentPassword} onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })} />
+                  <Input
+                    type="password"
+                    label="Current Password"
+                    placeholder="••••••••"
+                    value={passwords.currentPassword}
+                    onChange={(e) =>
+                      setPasswords({
+                        ...passwords,
+                        currentPassword: e.target.value,
+                      })
+                    }
+                  />
                   <div className="form-grid-2">
-                    <Input type="password" label="New Password"     placeholder="••••••••" value={passwords.newPassword}     onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} />
-                    <Input type="password" label="Confirm Password" placeholder="••••••••" value={passwords.confirmPassword} onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })} />
+                    <Input
+                      type="password"
+                      label="New Password"
+                      placeholder="••••••••"
+                      value={passwords.newPassword}
+                      onChange={(e) =>
+                        setPasswords({
+                          ...passwords,
+                          newPassword: e.target.value,
+                        })
+                      }
+                    />
+                    <Input
+                      type="password"
+                      label="Confirm Password"
+                      placeholder="••••••••"
+                      value={passwords.confirmPassword}
+                      onChange={(e) =>
+                        setPasswords({
+                          ...passwords,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                    />
                   </div>
                   <div>
-                    <div style={{ height: "8px", borderRadius: "999px", background: "#E5E7EB", overflow: "hidden" }}>
-                      <div style={{ width: passwords.newPassword.length < 4 ? "25%" : passwords.newPassword.length < 8 ? "50%" : "100%", height: "100%", background: passwords.newPassword.length < 4 ? "#EF4444" : passwords.newPassword.length < 8 ? "#F59E0B" : "#10B981", transition: "0.3s" }} />
+                    <div
+                      style={{
+                        height: "8px",
+                        borderRadius: "999px",
+                        background: "#E5E7EB",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width:
+                            passwords.newPassword.length < 4
+                              ? "25%"
+                              : passwords.newPassword.length < 8
+                                ? "50%"
+                                : "100%",
+                          height: "100%",
+                          background:
+                            passwords.newPassword.length < 4
+                              ? "#EF4444"
+                              : passwords.newPassword.length < 8
+                                ? "#F59E0B"
+                                : "#10B981",
+                          transition: "0.3s",
+                        }}
+                      />
                     </div>
-                    <small style={{ color: "var(--text-dim)", marginTop: "6px", display: "block" }}>Use at least 8 characters including numbers and symbols.</small>
+                    <small
+                      style={{
+                        color: "var(--text-dim)",
+                        marginTop: "6px",
+                        display: "block",
+                      }}
+                    >
+                      Use at least 8 characters including numbers and symbols.
+                    </small>
                   </div>
-                  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                    <Button onClick={handleChangePassword} isLoading={loading} leftIcon={<Key size={16} />}>Update Password</Button>
-                    <button onClick={handleForgotPassword} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontWeight: 600 }}>Forgot Password?</button>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "12px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Button
+                      onClick={handleChangePassword}
+                      isLoading={loading}
+                      leftIcon={<Key size={16} />}
+                    >
+                      Update Password
+                    </Button>
+                    <button
+                      onClick={handleForgotPassword}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--primary)",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Forgot Password?
+                    </button>
                   </div>
                 </div>
               </Card>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "20px",
+                }}
+              >
                 <Card>
-                  <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                    <div style={{ width: "54px", height: "54px", borderRadius: "14px", background: "#DBEAFE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "54px",
+                        height: "54px",
+                        borderRadius: "14px",
+                        background: "#DBEAFE",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
                       <Shield size={24} color="#2563EB" />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ marginBottom: "8px", fontSize: "1rem", fontWeight: 700 }}>Two-Factor Authentication</h3>
-                      <p style={{ color: "var(--text-dim)", fontSize: "0.9rem", marginBottom: "16px" }}>Add an extra layer of security by requiring a verification code.</p>
+                      <h3
+                        style={{
+                          marginBottom: "8px",
+                          fontSize: "1rem",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Two-Factor Authentication
+                      </h3>
+                      <p
+                        style={{
+                          color: "var(--text-dim)",
+                          fontSize: "0.9rem",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        Add an extra layer of security by requiring a
+                        verification code.
+                      </p>
                       <Button variant="outline">Configure 2FA →</Button>
                     </div>
                   </div>
                 </Card>
                 <Card>
-                  <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                    <div style={{ width: "54px", height: "54px", borderRadius: "14px", background: "#FCE7F3", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "54px",
+                        height: "54px",
+                        borderRadius: "14px",
+                        background: "#FCE7F3",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
                       <Monitor size={24} color="#DB2777" />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ marginBottom: "8px", fontSize: "1rem", fontWeight: 700 }}>Active Sessions</h3>
-                      <p style={{ color: "var(--text-dim)", fontSize: "0.9rem", marginBottom: "16px" }}>You are currently logged in on 3 devices.</p>
+                      <h3
+                        style={{
+                          marginBottom: "8px",
+                          fontSize: "1rem",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Active Sessions
+                      </h3>
+                      <p
+                        style={{
+                          color: "var(--text-dim)",
+                          fontSize: "0.9rem",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        You are currently logged in on 3 devices.
+                      </p>
                       <Button variant="outline">View Sessions →</Button>
                     </div>
                   </div>
                 </Card>
               </div>
 
-              <Card style={{ marginTop: "24px", border: "1px solid #FECACA", background: "#FEF2F2" }}>
+              <Card
+                style={{
+                  marginTop: "24px",
+                  border: "1px solid #FECACA",
+                  background: "#FEF2F2",
+                }}
+              >
                 <div className="flex-between">
                   <div>
-                    <h3 style={{ color: "#DC2626", marginBottom: "6px" }}>Deactivate Account</h3>
-                    <p style={{ color: "#7F1D1D", fontSize: "0.9rem" }}>Permanently remove your access to the portal.</p>
+                    <h3 style={{ color: "#DC2626", marginBottom: "6px" }}>
+                      Deactivate Account
+                    </h3>
+                    <p style={{ color: "#7F1D1D", fontSize: "0.9rem" }}>
+                      Permanently remove your access to the portal.
+                    </p>
                   </div>
-                  <Button variant="danger" onClick={() => { if (window.confirm("Are you sure?")) toast.warning("Account deactivation requires administrator approval."); }}>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      if (window.confirm("Are you sure?"))
+                        toast.warning(
+                          "Account deactivation requires administrator approval.",
+                        );
+                    }}
+                  >
                     Deactivate
                   </Button>
                 </div>
@@ -552,44 +1477,163 @@ export default function ProfilePage() {
 
           {/* ── Notifications ── */}
           {activeView === "notifications" && (
-            <motion.div key="notifications" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+            <motion.div
+              key="notifications"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
               <Card>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s-6)" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "var(--s-6)",
+                  }}
+                >
                   <div>
-                    <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "4px", color: "var(--text-main)" }}>Notification Preferences</h2>
-                    <p style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>Manage how and when you receive updates about your tickets.</p>
+                    <h2
+                      style={{
+                        fontWeight: 700,
+                        fontSize: "1.1rem",
+                        marginBottom: "4px",
+                        color: "var(--text-main)",
+                      }}
+                    >
+                      Notification Preferences
+                    </h2>
+                    <p
+                      style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}
+                    >
+                      Manage how and when you receive updates about your
+                      tickets.
+                    </p>
                   </div>
-                  <button onClick={() => setActiveView("profile")}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", borderRadius: "10px", border: "1px solid var(--border)", background: "white", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-dim)", transition: "all 0.15s" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-alt)"; e.currentTarget.style.color = "var(--text-main)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "var(--text-dim)"; }}
-                  >← Back</button>
+                  <button
+                    onClick={() => setActiveView("profile")}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid var(--border)",
+                      background: "white",
+                      cursor: "pointer",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      color: "var(--text-dim)",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--surface-alt)";
+                      e.currentTarget.style.color = "var(--text-main)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "white";
+                      e.currentTarget.style.color = "var(--text-dim)";
+                    }}
+                  >
+                    ← Back
+                  </button>
                 </div>
                 <div className="flex-col gap-4">
                   {[
-                    { id: "email",     label: "Email Notifications", desc: "Receive status updates and replies via email." },
-                    { id: "inApp",     label: "In-App Alerts",       desc: "Show real-time toast notifications in the portal." },
-                    { id: "onAssign",  label: "Assignment Alerts",   desc: "Notify me when I am assigned to a ticket." },
-                    { id: "onComment", label: "Comment Alerts",      desc: "Notify me when someone comments on my tickets." },
+                    {
+                      id: "email",
+                      label: "Email Notifications",
+                      desc: "Receive status updates and replies via email.",
+                    },
+                    {
+                      id: "inApp",
+                      label: "In-App Alerts",
+                      desc: "Show real-time toast notifications in the portal.",
+                    },
+                    {
+                      id: "onAssign",
+                      label: "Assignment Alerts",
+                      desc: "Notify me when I am assigned to a ticket.",
+                    },
+                    {
+                      id: "onComment",
+                      label: "Comment Alerts",
+                      desc: "Notify me when someone comments on my tickets.",
+                    },
                   ].map((pref) => (
-                    <div key={pref.id} className="flex-between" style={{ padding: "16px 20px", background: "var(--surface-alt)", borderRadius: "16px", border: "1px solid var(--border)" }}>
+                    <div
+                      key={pref.id}
+                      className="flex-between"
+                      style={{
+                        padding: "16px 20px",
+                        background: "var(--surface-alt)",
+                        borderRadius: "16px",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
                       <div className="flex-col">
-                        <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{pref.label}</span>
-                        <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>{pref.desc}</span>
+                        <span
+                          style={{ fontWeight: 700, color: "var(--text-main)" }}
+                        >
+                          {pref.label}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.8rem",
+                            color: "var(--text-dim)",
+                          }}
+                        >
+                          {pref.desc}
+                        </span>
                       </div>
                       <div
                         onClick={async () => {
-                          const newPrefs = { ...user.notificationPreferences, [pref.id]: !user.notificationPreferences?.[pref.id] };
+                          const newPrefs = {
+                            ...user.notificationPreferences,
+                            [pref.id]: !user.notificationPreferences?.[pref.id],
+                          };
                           try {
-                            const res = await userService.updateProfile({ notificationPreferences: newPrefs });
-                            const updated = res?.data?.user || res?.data?.data || res?.data;
+                            const res = await userService.updateProfile({
+                              notificationPreferences: newPrefs,
+                            });
+                            const updated =
+                              res?.data?.user || res?.data?.data || res?.data;
                             updateUser(updated);
                             toast.success(`${pref.label} updated`);
-                          } catch { toast.error("Failed to update preference"); }
+                          } catch {
+                            toast.error("Failed to update preference");
+                          }
                         }}
-                        style={{ width: "44px", height: "24px", background: user.notificationPreferences?.[pref.id] ? "var(--primary)" : "var(--border)", borderRadius: "20px", padding: "4px", cursor: "pointer", display: "flex", justifyContent: user.notificationPreferences?.[pref.id] ? "flex-end" : "flex-start", transition: "all 0.2s ease", flexShrink: 0 }}
+                        style={{
+                          width: "44px",
+                          height: "24px",
+                          background: user.notificationPreferences?.[pref.id]
+                            ? "var(--primary)"
+                            : "var(--border)",
+                          borderRadius: "20px",
+                          padding: "4px",
+                          cursor: "pointer",
+                          display: "flex",
+                          justifyContent: user.notificationPreferences?.[
+                            pref.id
+                          ]
+                            ? "flex-end"
+                            : "flex-start",
+                          transition: "all 0.2s ease",
+                          flexShrink: 0,
+                        }}
                       >
-                        <motion.div layout style={{ width: "16px", height: "16px", background: "white", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }} />
+                        <motion.div
+                          layout
+                          style={{
+                            width: "16px",
+                            height: "16px",
+                            background: "white",
+                            borderRadius: "50%",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                          }}
+                        />
                       </div>
                     </div>
                   ))}
@@ -597,7 +1641,6 @@ export default function ProfilePage() {
               </Card>
             </motion.div>
           )}
-
         </AnimatePresence>
       </motion.div>
     </>
