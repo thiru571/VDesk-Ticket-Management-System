@@ -171,22 +171,9 @@ const sendOtp = async (req, res, next) => {
       console.error('AuditLog Error:', logErr.message);
     }
 
-    // Send Email
-    try {
-      await sendOtpEmail({
-        to: normalizedEmail,
-        otp
-      });
-
-      console.log(`📧 OTP email sent to ${normalizedEmail}`);
-    } catch (emailErr) {
-      console.error('sendOtpEmail Error:', emailErr.message);
-
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send OTP email.'
-      });
-    }
+    console.log('================================');
+    console.log('DEV MODE OTP:', otp);
+    console.log('================================');
 
     return res.status(200).json({
       success: true,

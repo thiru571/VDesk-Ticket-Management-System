@@ -150,7 +150,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [devOtp, setDevOtp] = useState(null); // only populated in development
-
+  const [userType, setUserType] = useState('employee');
   // ── OTP timer hook ──────────────────────────────────────────────────────────
   const { formatted, isExpired, cooldown, onResend, isLocked } = useOtpTimer({
     expirySeconds: 300,
@@ -286,15 +286,29 @@ export default function LoginPage() {
             width: '100%', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto',
           }}>
             {[
-              { label: 'Employee', mobile: false, disabled: false },
-              { label: 'Staff',    mobile: false, disabled: true  },
-              { label: 'Mobile Access', mobile: true, disabled: false },
+             { label: 'Employee', mobile: false, disabled: false },
+             { label: 'Support Agent', mobile: false, disabled: false },
+             { label: 'Mobile Access', mobile: true, disabled: false },
             ].map(({ label, mobile, disabled }) => {
-              const active = !disabled && (mobile ? useMobile : !useMobile);
+              const active =
+                (label === 'Employee' && !useMobile && userType === 'employee') ||
+                (label === 'Support Agent' && !useMobile && userType === 'support_agent') ||
+                (label === 'Mobile Access' && useMobile);
               return (
                 <button
                   key={label}
-                  onClick={disabled ? undefined : () => { setUseMobile(mobile); setStep('email'); setOtp(['','','','','','']); }}
+                  onClick={disabled ? undefined : () => {
+                    setUseMobile(mobile);
+
+  if (label === 'Employee') {
+    setUserType('employee');
+  } else if (label === 'Support Agent') {
+    setUserType('support_agent');
+  }
+
+  setStep('email');
+  setOtp(['','','','','','']);
+}}
                   disabled={disabled}
                   style={{
                     paddingBottom: '12px',
@@ -327,11 +341,15 @@ export default function LoginPage() {
               style={{ width: '100%', maxWidth: '420px' }}
             >
               <div style={{ marginBottom: 'var(--s-8)', textAlign: 'center' }}>
-                <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: '#1a1a1a', letterSpacing: '-0.04em', marginBottom: '12px' }}>
-                  Welcome back
+                <h2 style={{ fontSize: '2.25rem', fontWeight: 900 }}>
+                  {userType === 'support_agent'
+                  ? 'Support Agent Login'
+                  : 'Employee Login'}
                 </h2>
                 <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem', lineHeight: 1.5 }}>
-                  Enter your work email address to receive a secure sign-in code.
+                    {userType === 'support_agent'
+                    ? 'Sign in as a Support Agent to manage tickets and assignments.'
+                    : 'Enter your work email address to receive a secure sign-in code.'}
                 </p>
               </div>
 

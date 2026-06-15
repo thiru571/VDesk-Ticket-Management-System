@@ -208,6 +208,30 @@ connectDB().then(() => {
         console.log('✅ Dummy account seeded: dummy@vdartinc.com');
       }
 
+  const existingAgent = await User.findOne({
+  email: 'agent@vdartinc.com'
+});
+
+if (!existingAgent) {
+  const agentUser = new User({
+    name: 'Support Agent',
+    email: 'agent@vdartinc.com',
+    password: 'Agent@123',
+    role: 'support_agent',
+    department: 'IT',
+    designation: 'Support Agent',
+    employeeId: 'AGENT-001',
+    isVerified: true,
+    isActive: true,
+    createdByAdmin: true,
+    phone: '9876543211'
+  });
+
+  await agentUser.save();
+  console.log('✅ Support Agent seeded: agent@vdartinc.com');
+}
+ 
+
       // 6. Seed Knowledge Base dummy data
       const seedKnowledgeBase = require('./scripts/seedKnowledge');
       await seedKnowledgeBase();
