@@ -372,6 +372,27 @@ export default function LoginPage() {
                 >
                   Send Sign-in Code
                 </Button>
+
+                <p
+  style={{
+    textAlign: 'center',
+    marginTop: '20px',
+    fontSize: '0.9rem',
+    color: '#6B7280'
+  }}
+>
+  New Employee?{" "}
+  <span
+    onClick={() => navigate('/register')}
+    style={{
+      color: '#1F4E79',
+      fontWeight: '700',
+      cursor: 'pointer'
+    }}
+  >
+    Register Now
+  </span>
+</p>
               </form>
             </motion.div>
           )}

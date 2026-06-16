@@ -26,9 +26,23 @@ const requestVerification = async (req, res, next) => {
     if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
     const normalizedEmail = email.toLowerCase().trim();
-    if (!normalizedEmail.endsWith('@vdartinc.com') && !normalizedEmail.endsWith('@ndartinc.com')) {
-      return res.status(400).json({ success: false, message: 'Only @vdartinc.com or @ndartinc.com emails are accepted' });
-    }
+
+const allowedDomains = [
+  '@vdartinc.com',
+  '@ndartinc.com',
+  '@gmail.com'
+];
+
+const isAllowed = allowedDomains.some(domain =>
+  normalizedEmail.endsWith(domain)
+);
+
+if (!isAllowed) {
+  return res.status(400).json({
+    success: false,
+    message: 'Only @vdartinc.com, @ndartinc.com or @gmail.com emails are accepted'
+  });
+}
 
     let user = await User.findOne({ email: normalizedEmail }).select('+verificationToken +verificationTokenExpiry');
 
@@ -108,9 +122,15 @@ const sendOtp = async (req, res, next) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    const isAllowedDomain =
-      normalizedEmail.endsWith('@vdartinc.com') ||
-      normalizedEmail.endsWith('@ndartinc.com');
+    const allowedDomains = [
+  '@vdartinc.com',
+  '@ndartinc.com',
+  '@gmail.com'
+];
+
+const isAllowedDomain = allowedDomains.some(domain =>
+  normalizedEmail.endsWith(domain)
+);
 
     if (!isAllowedDomain) {
       return res.status(400).json({

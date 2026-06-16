@@ -295,10 +295,65 @@ const sendStatusChangeEmail = async ({ to, name, ticket, newStatus }) => {
   }
 };
 
+const sendVerificationEmail = async ({ to, verifyUrl }) => {
+  const transport = getTransporter();
+
+  await transport.sendMail({
+    from: FROM_VDESK(),
+    to,
+    subject: 'Verify your VDesk account',
+    html: `
+      <h2>Welcome to VDesk</h2>
+
+      <p>Click the button below to verify your email.</p>
+
+      <p>
+        <a href="${verifyUrl}"
+           style="
+             background:#1E40AF;
+             color:white;
+             padding:12px 24px;
+             text-decoration:none;
+             border-radius:6px;">
+          Verify Email
+        </a>
+      </p>
+
+      <p>If the button doesn't work:</p>
+
+      <p>${verifyUrl}</p>
+    `
+  });
+
+  console.log("📧 Verification email sent to", to);
+};
+
+const sendPasswordSetEmail = async ({ to, password }) => {
+  const transport = getTransporter();
+
+  await transport.sendMail({
+    from: FROM_VDESK(),
+    to,
+    subject: 'Your VDesk Account',
+
+    html: `
+      <h2>Your account is ready</h2>
+
+      <p>Your temporary password is:</p>
+
+      <h3>${password}</h3>
+
+      <p>Please change it after logging in.</p>
+    `
+  });
+};
+
 // ─── Exports ──────────────────────────────────────────────────────────────────
 module.exports = {
+  sendVerificationEmail,
+  sendPasswordSetEmail,
   sendOtpEmail,
-  sendPasswordResetEmail,  // ✅ added
+  sendPasswordResetEmail,
   sendTicketConfirmation,
   sendAckEmail,
   sendResolveEmail,

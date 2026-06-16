@@ -15,9 +15,21 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) return toast.error('Please enter your work email');
-    if (!email.toLowerCase().endsWith('@vdartinc.com')) {
-      return toast.error('Only @vdartinc.com emails are accepted');
-    }
+    const allowedDomains = [
+     '@vdartinc.com',
+     '@gmail.com'
+    ];
+
+  const isValid = allowedDomains.some(domain =>
+  email.toLowerCase().endsWith(domain)
+  );
+
+  console.log("Email:", email);
+  console.log("isValid:", isValid);
+
+  if (!isValid) {
+  return toast.error('Only @vdartinc.com or @gmail.com emails are accepted');
+  }
 
     setLoading(true);
     try {
