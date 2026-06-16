@@ -15,6 +15,10 @@ import {
   Settings,
   ChevronRight,
   LogOut,
+  BadgeCheck,
+  Phone,
+  User,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -23,6 +27,7 @@ import { getInitials, getAvatarColor } from "../utils/helpers";
 import { Card, Button, Input, Badge } from "../ui";
 import { motion, AnimatePresence } from "framer-motion";
 
+// ─── Indian States ────────────────────────────────────────────────────────────
 const INDIAN_STATES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
@@ -62,6 +67,7 @@ const INDIAN_STATES = [
   "Puducherry",
 ];
 
+// ─── Shared menu item style ───────────────────────────────────────────────────
 const menuItemStyle = {
   display: "flex",
   alignItems: "center",
@@ -79,6 +85,20 @@ const menuItemStyle = {
   textAlign: "left",
 };
 
+// ─── Section label style ──────────────────────────────────────────────────────
+const sectionLabelStyle = {
+  marginBottom: "var(--s-4, 16px)",
+  fontSize: "0.7rem",
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+  color: "var(--primary, #4F46E5)",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+};
+
+// ─── Settings Dropdown ────────────────────────────────────────────────────────
 function SettingsDropdown({ onSelect, onClose, onSignOut }) {
   const items = [
     {
@@ -96,6 +116,7 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
       bg: "#EDE9FE",
     },
   ];
+
   return (
     <motion.div
       data-settings-menu="true"
@@ -130,6 +151,7 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
       >
         Settings
       </p>
+
       {items.map(({ id, label, icon: Icon, color, bg }) => (
         <button
           key={id}
@@ -164,6 +186,7 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
           <ChevronRight size={14} color="var(--text-dim)" />
         </button>
       ))}
+
       <div
         style={{
           borderTop: "1px solid var(--border-light)",
@@ -204,6 +227,7 @@ function SettingsDropdown({ onSelect, onClose, onSignOut }) {
   );
 }
 
+// ─── Avatar Upload Menu (Portal) ─────────────────────────────────────────────
 function AvatarUploadMenu({
   anchorRef,
   hasAvatar,
@@ -212,6 +236,7 @@ function AvatarUploadMenu({
   onRemove,
 }) {
   const [coords, setCoords] = useState({ top: 0, left: 0 });
+
   useEffect(() => {
     if (anchorRef?.current) {
       const rect = anchorRef.current.getBoundingClientRect();
@@ -221,6 +246,7 @@ function AvatarUploadMenu({
       });
     }
   }, [anchorRef]);
+
   return ReactDOM.createPortal(
     <motion.div
       data-avatar-menu="true"
@@ -272,6 +298,10 @@ function AvatarUploadMenu({
         <button
           onClick={onRemove}
           style={{ ...menuItemStyle, color: "var(--danger)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#FEF2F2")}
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "transparent")
+          }
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <X size={16} />
@@ -284,6 +314,7 @@ function AvatarUploadMenu({
   );
 }
 
+// ─── Camera Modal ─────────────────────────────────────────────────────────────
 function CameraModal({ onCapture, onClose }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -310,7 +341,9 @@ function CameraModal({ onCapture, onClose }) {
       setError(err.message || "Camera access denied.");
     }
   };
+
   const stopCamera = () => stream?.getTracks().forEach((t) => t.stop());
+
   const handleCapture = () => {
     const v = videoRef.current,
       c = canvasRef.current;
@@ -320,6 +353,7 @@ function CameraModal({ onCapture, onClose }) {
     setCaptured(c.toDataURL("image/jpeg", 0.9));
     stopCamera();
   };
+
   const handleRetake = () => {
     setCaptured(null);
     startCamera();
@@ -390,6 +424,7 @@ function CameraModal({ onCapture, onClose }) {
             <X size={16} />
           </button>
         </div>
+
         {error ? (
           <div
             style={{
@@ -493,13 +528,17 @@ function CameraModal({ onCapture, onClose }) {
   );
 }
 
-// ─── Helper: build profile state from user object ─────────────────────────────
+// ─── Build profile state from user object ────────────────────────────────────
 function buildProfileFromUser(user) {
   const parts = (user?.name || "").split(" ");
+
   return {
-    firstName: parts[0] || "",
-    lastName: parts.slice(1).join(" ") || "",
-    phone: user?.phone || "",
+    fullName: user?.name || "",
+    // read-only fields — fetched from MongoDB, never sent in PATCH
+    email: user?.email || "",
+    employeeId: user?.employeeId || user?.empId || "",
+    // editable fields
+    phone: user?.phone || user?.mobileNumber || "",
     designation: user?.designation || "",
     preferredContact: user?.preferredContact || "email",
     location: {
@@ -513,6 +552,7 @@ function buildProfileFromUser(user) {
   };
 }
 
+// ─── Page config ─────────────────────────────────────────────────────────────
 const PAGE_CONFIG = {
   profile: {
     title: "Basic Profile",
@@ -528,6 +568,7 @@ const PAGE_CONFIG = {
   },
 };
 
+// ─── Main Export ─────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { user, updateUser, logout } = useAuth();
   const toast = useToast();
@@ -552,7 +593,7 @@ export default function ProfilePage() {
   const avatarMenuRef = useRef(null);
   const settingsButtonRef = useRef(null);
 
-  // ── KEY FIX: re-sync form whenever auth `user` changes (after save OR refresh) ──
+  // Re-sync form whenever auth `user` changes (after save OR refresh)
   useEffect(() => {
     if (!user) return;
     setProfile(buildProfileFromUser(user));
@@ -633,16 +674,20 @@ export default function ProfilePage() {
     }
   };
 
-  // ── Profile save ─────────────────────────────────────────────────────────────
+  // ── Profile save — only send editable fields ─────────────────────────────────
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await userService.updateProfile({
-        ...profile,
-        name: `${profile.firstName} ${profile.lastName}`.trim(),
+        name: profile.fullName,
+        email: profile.email,
+        employeeId: profile.employeeId,
+        phone: profile.phone,
+        designation: profile.designation,
+        preferredContact: profile.preferredContact,
+        location: profile.location,
       });
-      // Safely extract the full updated user — never pass a partial object
       const updated = res?.data?.user || res?.data?.data || res?.data;
       updateUser(updated);
       toast.success("Profile updated successfully");
@@ -658,6 +703,8 @@ export default function ProfilePage() {
     if (e?.preventDefault) e.preventDefault();
     if (passwords.newPassword !== passwords.confirmPassword)
       return toast.error("Passwords do not match");
+    if (passwords.newPassword.length < 8)
+      return toast.error("Password must be at least 8 characters");
     setLoading(true);
     try {
       await userService.changePassword({
@@ -683,8 +730,23 @@ export default function ProfilePage() {
     navigate("/forgot-password");
   };
 
+  // ── Password strength ────────────────────────────────────────────────────────
+  const passwordStrength = (() => {
+    const len = passwords.newPassword.length;
+    if (!len) return { pct: 0, color: "#E5E7EB", label: "" };
+    if (len < 4) return { pct: 20, color: "#EF4444", label: "Very weak" };
+    if (len < 8) return { pct: 50, color: "#F59E0B", label: "Fair" };
+    const hasNum = /\d/.test(passwords.newPassword);
+    const hasSym = /[^A-Za-z0-9]/.test(passwords.newPassword);
+    if (hasNum && hasSym)
+      return { pct: 100, color: "#10B981", label: "Strong" };
+    if (hasNum || hasSym) return { pct: 75, color: "#3B82F6", label: "Good" };
+    return { pct: 60, color: "#F59E0B", label: "Moderate" };
+  })();
+
   const { title, subtitle } = PAGE_CONFIG[activeView];
 
+  // ── Card header (profile view) ───────────────────────────────────────────────
   const cardHeader = (
     <div
       style={{
@@ -713,6 +775,7 @@ export default function ProfilePage() {
           {subtitle}
         </p>
       </div>
+
       {activeView === "profile" && (
         <div style={{ position: "relative" }}>
           <button
@@ -757,8 +820,10 @@ export default function ProfilePage() {
     </div>
   );
 
+  // ────────────────────────────────────────────────────────────────────────────
   return (
     <>
+      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -766,6 +831,8 @@ export default function ProfilePage() {
         onChange={handleFileSelect}
         style={{ display: "none" }}
       />
+
+      {/* Camera modal */}
       <AnimatePresence>
         {showCameraModal && (
           <CameraModal
@@ -781,7 +848,9 @@ export default function ProfilePage() {
         className="page-layout"
       >
         <AnimatePresence mode="wait">
-          {/* ── General Info ── */}
+          {/* ══════════════════════════════════════════════
+              PROFILE VIEW
+          ══════════════════════════════════════════════ */}
           {activeView === "profile" && (
             <motion.div
               key="profile"
@@ -791,9 +860,10 @@ export default function ProfilePage() {
               transition={{ duration: 0.18 }}
             >
               {cardHeader}
+
               <Card>
                 <form onSubmit={handleUpdateProfile} className="flex-col gap-6">
-                  {/* Avatar + User Summary */}
+                  {/* ── Avatar + User Summary ── */}
                   <div
                     style={{
                       display: "flex",
@@ -803,6 +873,7 @@ export default function ProfilePage() {
                       borderBottom: "1px solid var(--border-light)",
                     }}
                   >
+                    {/* Avatar */}
                     <div
                       ref={avatarMenuRef}
                       style={{ position: "relative", flexShrink: 0 }}
@@ -839,6 +910,8 @@ export default function ProfilePage() {
                           getInitials(user?.name)
                         )}
                       </div>
+
+                      {/* Camera button */}
                       <button
                         type="button"
                         ref={cameraButtonRef}
@@ -861,6 +934,7 @@ export default function ProfilePage() {
                       >
                         <Camera size={12} />
                       </button>
+
                       <AnimatePresence>
                         {showAvatarMenu && (
                           <AvatarUploadMenu
@@ -882,6 +956,8 @@ export default function ProfilePage() {
                         )}
                       </AnimatePresence>
                     </div>
+
+                    {/* Name + role + email summary */}
                     <div>
                       <div
                         style={{
@@ -924,25 +1000,65 @@ export default function ProfilePage() {
                         <Mail size={13} />
                         {user?.email}
                       </div>
+                      {profile.employeeId && (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            color: "var(--text-dim)",
+                            fontSize: "0.8rem",
+                            marginTop: "2px",
+                          }}
+                        >
+                          <BadgeCheck size={12} />
+                          {profile.employeeId}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Fields */}
-                  <div className="form-grid-2">
+                  {/* ── Section: Personal Info ── */}
+                  <div>
+                    <p style={sectionLabelStyle}>
+                      <User size={11} />
+                      Personal Information
+                    </p>
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "16px",
+                    }}
+                  >
                     <Input
-                      label="First Name"
-                      value={profile.firstName}
+                      label="Full Name"
+                      value={profile.fullName}
                       onChange={(e) =>
-                        setProfile({ ...profile, firstName: e.target.value })
+                        setProfile({ ...profile, fullName: e.target.value })
                       }
                     />
+
                     <Input
-                      label="Last Name"
-                      value={profile.lastName}
+                      label="Email"
+                      type="email"
+                      value={profile.email}
                       onChange={(e) =>
-                        setProfile({ ...profile, lastName: e.target.value })
+                        setProfile({ ...profile, email: e.target.value })
                       }
                     />
+
+                    <Input
+                      label="Employee ID"
+                      value={profile.employeeId}
+                      readOnly
+                      style={{
+                        background: "#F9FAFB",
+                        cursor: "not-allowed",
+                      }}
+                    />
+
                     <Input
                       label="Designation"
                       value={profile.designation}
@@ -950,14 +1066,22 @@ export default function ProfilePage() {
                         setProfile({ ...profile, designation: e.target.value })
                       }
                     />
-                    <Input
-                      label="Phone Number"
-                      placeholder="+91 00000 00000"
-                      value={profile.phone}
-                      onChange={(e) =>
-                        setProfile({ ...profile, phone: e.target.value })
-                      }
-                    />
+
+                     <div className="input-group">
+  <label className="input-label">Phone Number</label>
+  <input
+    className="input"
+    placeholder="+91 9876543210"
+    value={profile.phone}
+    onChange={(e) =>
+      setProfile({
+        ...profile,
+        phone: e.target.value,
+      })
+    }
+  />
+</div>
+
                     <div className="input-group">
                       <label className="input-label">Preferred Contact</label>
                       <select
@@ -976,26 +1100,17 @@ export default function ProfilePage() {
                       </select>
                     </div>
                   </div>
-
-                  {/* Work Location */}
+                  {/* ── Section: Work Location ── */}
                   <div
                     style={{
                       borderTop: "1px solid var(--border-light)",
                       paddingTop: "var(--s-6)",
                     }}
                   >
-                    <h4
-                      style={{
-                        marginBottom: "var(--s-4)",
-                        fontSize: "0.75rem",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        color: "var(--primary)",
-                      }}
-                    >
+                    <p style={sectionLabelStyle}>
+                      <MapPin size={11} />
                       Work Location
-                    </h4>
+                    </p>
                     <div className="flex-col gap-4">
                       <div className="form-grid-2">
                         <Input
@@ -1044,6 +1159,7 @@ export default function ProfilePage() {
                           }
                         />
                       </div>
+
                       <div
                         style={{
                           display: "grid",
@@ -1070,6 +1186,7 @@ export default function ProfilePage() {
                             })
                           }
                         />
+
                         <div className="input-group">
                           <label className="input-label">
                             District{" "}
@@ -1107,6 +1224,7 @@ export default function ProfilePage() {
                             ))}
                           </select>
                         </div>
+
                         <div className="input-group">
                           <label className="input-label">
                             State{" "}
@@ -1133,6 +1251,7 @@ export default function ProfilePage() {
                             ))}
                           </select>
                         </div>
+
                         <Input
                           label={
                             <>
@@ -1157,6 +1276,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
+                  {/* ── Save button ── */}
                   <div
                     style={{
                       display: "flex",
@@ -1173,7 +1293,9 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* ── Security & Auth ── */}
+          {/* ══════════════════════════════════════════════
+              SECURITY VIEW
+          ══════════════════════════════════════════════ */}
           {activeView === "security" && (
             <motion.div
               key="security"
@@ -1236,6 +1358,7 @@ export default function ProfilePage() {
                     ← Back
                   </button>
                 </div>
+
                 <div className="flex-col gap-5">
                   <Input
                     type="password"
@@ -1275,44 +1398,56 @@ export default function ProfilePage() {
                       }
                     />
                   </div>
+
+                  {/* Password strength bar */}
                   <div>
                     <div
                       style={{
-                        height: "8px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      <small
+                        style={{
+                          color: "var(--text-dim)",
+                          fontSize: "0.78rem",
+                        }}
+                      >
+                        Use at least 8 characters including numbers and symbols.
+                      </small>
+                      {passwordStrength.label && (
+                        <small
+                          style={{
+                            color: passwordStrength.color,
+                            fontWeight: 600,
+                            fontSize: "0.78rem",
+                          }}
+                        >
+                          {passwordStrength.label}
+                        </small>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        height: "6px",
                         borderRadius: "999px",
                         background: "#E5E7EB",
                         overflow: "hidden",
                       }}
                     >
-                      <div
+                      <motion.div
+                        animate={{ width: `${passwordStrength.pct}%` }}
+                        transition={{ duration: 0.3 }}
                         style={{
-                          width:
-                            passwords.newPassword.length < 4
-                              ? "25%"
-                              : passwords.newPassword.length < 8
-                                ? "50%"
-                                : "100%",
                           height: "100%",
-                          background:
-                            passwords.newPassword.length < 4
-                              ? "#EF4444"
-                              : passwords.newPassword.length < 8
-                                ? "#F59E0B"
-                                : "#10B981",
-                          transition: "0.3s",
+                          background: passwordStrength.color,
+                          borderRadius: "999px",
                         }}
                       />
                     </div>
-                    <small
-                      style={{
-                        color: "var(--text-dim)",
-                        marginTop: "6px",
-                        display: "block",
-                      }}
-                    >
-                      Use at least 8 characters including numbers and symbols.
-                    </small>
                   </div>
+
                   <div
                     style={{
                       display: "flex",
@@ -1343,6 +1478,7 @@ export default function ProfilePage() {
                 </div>
               </Card>
 
+              {/* 2FA + Sessions */}
               <div
                 style={{
                   display: "grid",
@@ -1396,6 +1532,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </Card>
+
                 <Card>
                   <div
                     style={{
@@ -1443,6 +1580,7 @@ export default function ProfilePage() {
                 </Card>
               </div>
 
+              {/* Deactivate account */}
               <Card
                 style={{
                   marginTop: "24px",
@@ -1462,7 +1600,11 @@ export default function ProfilePage() {
                   <Button
                     variant="danger"
                     onClick={() => {
-                      if (window.confirm("Are you sure?"))
+                      if (
+                        window.confirm(
+                          "Are you sure? This action requires administrator approval.",
+                        )
+                      )
                         toast.warning(
                           "Account deactivation requires administrator approval.",
                         );
@@ -1475,7 +1617,9 @@ export default function ProfilePage() {
             </motion.div>
           )}
 
-          {/* ── Notifications ── */}
+          {/* ══════════════════════════════════════════════
+              NOTIFICATIONS VIEW
+          ══════════════════════════════════════════════ */}
           {activeView === "notifications" && (
             <motion.div
               key="notifications"
@@ -1539,6 +1683,7 @@ export default function ProfilePage() {
                     ← Back
                   </button>
                 </div>
+
                 <div className="flex-col gap-4">
                   {[
                     {
@@ -1561,82 +1706,89 @@ export default function ProfilePage() {
                       label: "Comment Alerts",
                       desc: "Notify me when someone comments on my tickets.",
                     },
-                  ].map((pref) => (
-                    <div
-                      key={pref.id}
-                      className="flex-between"
-                      style={{
-                        padding: "16px 20px",
-                        background: "var(--surface-alt)",
-                        borderRadius: "16px",
-                        border: "1px solid var(--border)",
-                      }}
-                    >
-                      <div className="flex-col">
-                        <span
-                          style={{ fontWeight: 700, color: "var(--text-main)" }}
-                        >
-                          {pref.label}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "var(--text-dim)",
-                          }}
-                        >
-                          {pref.desc}
-                        </span>
-                      </div>
+                  ].map((pref) => {
+                    const isOn = !!user?.notificationPreferences?.[pref.id];
+                    return (
                       <div
-                        onClick={async () => {
-                          const newPrefs = {
-                            ...user.notificationPreferences,
-                            [pref.id]: !user.notificationPreferences?.[pref.id],
-                          };
-                          try {
-                            const res = await userService.updateProfile({
-                              notificationPreferences: newPrefs,
-                            });
-                            const updated =
-                              res?.data?.user || res?.data?.data || res?.data;
-                            updateUser(updated);
-                            toast.success(`${pref.label} updated`);
-                          } catch {
-                            toast.error("Failed to update preference");
-                          }
-                        }}
+                        key={pref.id}
+                        className="flex-between"
                         style={{
-                          width: "44px",
-                          height: "24px",
-                          background: user.notificationPreferences?.[pref.id]
-                            ? "var(--primary)"
-                            : "var(--border)",
-                          borderRadius: "20px",
-                          padding: "4px",
-                          cursor: "pointer",
-                          display: "flex",
-                          justifyContent: user.notificationPreferences?.[
-                            pref.id
-                          ]
-                            ? "flex-end"
-                            : "flex-start",
-                          transition: "all 0.2s ease",
-                          flexShrink: 0,
+                          padding: "16px 20px",
+                          background: "var(--surface-alt)",
+                          borderRadius: "16px",
+                          border: "1px solid var(--border)",
                         }}
                       >
-                        <motion.div
-                          layout
-                          style={{
-                            width: "16px",
-                            height: "16px",
-                            background: "white",
-                            borderRadius: "50%",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                        <div className="flex-col">
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: "var(--text-main)",
+                            }}
+                          >
+                            {pref.label}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "0.8rem",
+                              color: "var(--text-dim)",
+                            }}
+                          >
+                            {pref.desc}
+                          </span>
+                        </div>
+
+                        <div
+                          role="switch"
+                          aria-checked={isOn}
+                          onClick={async () => {
+                            const newPrefs = {
+                              ...user.notificationPreferences,
+                              [pref.id]: !isOn,
+                            };
+                            try {
+                              const res = await userService.updateProfile({
+                                notificationPreferences: newPrefs,
+                              });
+                              const updated =
+                                res?.data?.user || res?.data?.data || res?.data;
+                              updateUser(updated);
+                              toast.success(
+                                `${pref.label} ${!isOn ? "enabled" : "disabled"}`,
+                              );
+                            } catch {
+                              toast.error("Failed to update preference");
+                            }
                           }}
-                        />
+                          style={{
+                            width: "44px",
+                            height: "24px",
+                            background: isOn
+                              ? "var(--primary)"
+                              : "var(--border)",
+                            borderRadius: "20px",
+                            padding: "4px",
+                            cursor: "pointer",
+                            display: "flex",
+                            justifyContent: isOn ? "flex-end" : "flex-start",
+                            transition: "all 0.2s ease",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <motion.div
+                            layout
+                            style={{
+                              width: "16px",
+                              height: "16px",
+                              background: "white",
+                              borderRadius: "50%",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Card>
             </motion.div>

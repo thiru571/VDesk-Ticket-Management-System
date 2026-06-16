@@ -125,14 +125,20 @@
   border-radius: 12px;
   width: 320px;
   transition: var(--transition);
-  border: 1px solid transparent;
+
+  border: 1px solid #d1d5db;
 }
 
 .premium-search:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* .premium-search:focus-within {
   background: white;
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-light);
-}
+} */
 
 .premium-search input {
   border: none;

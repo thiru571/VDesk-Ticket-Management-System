@@ -29,54 +29,59 @@ export const ticketService = {
   resumeTicket: (id) => api.post(`/tickets/${id}/resume`),
   getAgentPerformance: () => api.get('/analytics/agent-performance'),
   autoAssign: (id) => api.patch(`/tickets/${id}/auto-assign`),
-
-  acknowledge: (id, data) => api.post(`/tickets/${id}/acknowledge`, data)
+  acknowledge: (id, data) => api.post(`/tickets/${id}/acknowledge`, data),
 };
 
 export const emailService = {
-  send: (data) => api.post('/email/send-email', data)
+  send: (data) => api.post('/email/send-email', data),
 };
 
 export const commentService = {
   getAll: (ticketId) => api.get(`/comments/${ticketId}`),
   add: (ticketId, formData) => api.post(`/comments/${ticketId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   edit: (id, data) => api.put(`/comments/${id}`, data),
-  delete: (id) => api.delete(`/comments/${id}`)
+  delete: (id) => api.delete(`/comments/${id}`),
 };
 
 export const notificationService = {
   getAll: (params) => api.get('/notifications', { params }),
   markRead: (data) => api.patch('/notifications/read', data),
-  delete: (id) => api.delete(`/notifications/${id}`)
+  delete: (id) => api.delete(`/notifications/${id}`),
 };
 
 export const dashboardService = {
   employee: () => api.get('/dashboard/employee'),
   admin: () => api.get('/dashboard/admin'),
-  workload: () => api.get('/dashboard/workload')
+  workload: () => api.get('/dashboard/workload'),
 };
 
 export const userService = {
-  getAll: (params) => api.get('/users', { params }),
+  getAll:    (params) => api.get('/users', { params }),
   getAgents: (params) => api.get('/users/agents', { params }),
-  getOne: (id) => api.get(`/users/${id}`),
-  update: (id, data) => api.put(`/users/${id}`, data),
-  getStats: (id) => api.get(`/users/${id}/stats`),
-  updateProfile: (data) => api.put('/auth/profile/', data),
-  changePassword: (data) => api.put('/auth/change-password', data),
-  updateLiveStatus: (data) => api.put('/users/status', data)
+  getOne:    (id)     => api.get(`/users/${id}`),
+  update:    (id, data) => api.put(`/users/${id}`, data),
+  getStats:  (id)     => api.get(`/users/${id}/stats`),
+
+  // ── Profile (logged-in user) ──────────────────────────────────────────────
+  // GET  /api/profile        → fetch current user from MongoDB
+  // PATCH /api/profile       → save name, email, employeeId, phone, designation, location, avatar
+  // PATCH /api/profile/password → change password
+  getProfile:     ()     => api.get('/auth/me'),
+updateProfile:  (data) => api.put('/auth/profile', data),
+changePassword: (data) => api.put('/auth/change-password', data),
+  updateLiveStatus: (data) => api.put('/users/status', data),
 };
 
 export const knowledgeService = {
   search: (params) => api.get('/knowledge/search', { params }),
   getAll: (params) => api.get('/knowledge', { params }),
-  getOne: (id) => api.get(`/knowledge/${id}`),
-  create: (data) => api.post('/knowledge', data),
+  getOne: (id)     => api.get(`/knowledge/${id}`),
+  create: (data)   => api.post('/knowledge', data),
   update: (id, data) => api.put(`/knowledge/${id}`, data),
-  rate: (id, helpful) => api.post(`/knowledge/${id}/rate`, { helpful })
+  rate:   (id, helpful) => api.post(`/knowledge/${id}/rate`, { helpful }),
 };
 
 export const settingsService = {
-  getAll: () => api.get('/settings'),
-  update: (data) => api.post('/settings', data)
+  getAll: ()     => api.get('/settings'),
+  update: (data) => api.post('/settings', data),
 };

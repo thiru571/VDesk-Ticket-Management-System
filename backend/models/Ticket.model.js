@@ -73,8 +73,8 @@ const ticketSchema = new mongoose.Schema({
   },
   source: {
     type: String,
-    enum: ['Portal', 'Email', 'Mail','Digital', 'Onboarding'],
-    default: 'Portal'
+    enum: ['portal', 'Email', 'Mail','Digital', 'Onboarding'],
+    default: 'portal'
   },
   vpAssigned: {
     type: String,

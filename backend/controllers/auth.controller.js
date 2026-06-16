@@ -254,18 +254,20 @@ const verifyOtp = async (req, res, next) => {
       message: 'OTP verified successfully',
       token,
       user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        userType: user.userType,
-        designation: user.designation,
-        avatar: user.avatar,
-        preferredContact: user.preferredContact,
-        notificationPreferences: user.notificationPreferences,
-        location: user.location
-      }
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  employeeId: user.employeeId,
+  phone: user.phone,
+  role: user.role,
+  department: user.department,
+  userType: user.userType,
+  designation: user.designation,
+  avatar: user.avatar,
+  preferredContact: user.preferredContact,
+  notificationPreferences: user.notificationPreferences,
+  location: user.location
+}
     });
   } catch (err) {
     next(err);
@@ -287,8 +289,8 @@ const login = async (req, res, next) => {
 const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select(
-      '_id name email role department userType designation avatar preferredContact notificationPreferences location stats'
-    );
+  '_id name email employeeId phone role department userType designation avatar preferredContact notificationPreferences location stats'
+);
 
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
@@ -477,15 +479,18 @@ const changePassword = async (req, res, next) => {
 const UptadeProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
+
     const {
       name,
+      email,
+      employeeId,
       department,
       designation,
       preferredContact,
       location,
-      avatar,                    // ← was missing
-      notificationPreferences,   // ← was missing
-      phone,                     // ← was missing
+      avatar,
+      notificationPreferences,
+      phone,
     } = req.body;
 
     const user = await User.findById(userId);
@@ -501,6 +506,8 @@ const UptadeProfile = async (req, res, next) => {
     if (notificationPreferences !== undefined) {
       user.notificationPreferences = { ...user.notificationPreferences, ...notificationPreferences };
     }
+    if (email !== undefined) user.email = email;
+if (employeeId !== undefined) user.employeeId = employeeId;
 
     await user.save();
 
