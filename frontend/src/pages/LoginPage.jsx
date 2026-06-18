@@ -174,7 +174,12 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const payload = useMobile ? { mobile } : { email };
+      const payload = useMobile
+  ? { mobile }
+  : {
+      email,
+      role: userType,
+    };
       const res = await api.post('/auth/send-otp', payload);
       toast.success(res.data.message || 'Code sent!');
       setStep('otp');
@@ -205,7 +210,12 @@ export default function LoginPage() {
     setOtp(['', '', '', '', '', '']);
     setDevOtp(null);
     try {
-      const payload = useMobile ? { mobile } : { email };
+      const payload = useMobile
+  ? { mobile }
+  : {
+      email,
+      role: userType,
+    };
       const res = await api.post('/auth/send-otp', payload);
       toast.success(res.data.message || 'New code sent!');
       if (res.data.devOtp) {
@@ -228,7 +238,13 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const payload = useMobile ? { mobile, otp: otpCode } : { email, otp: otpCode };
+      const payload = useMobile
+  ? { mobile, otp: otpCode }
+  : {
+      email,
+      otp: otpCode,
+      role: userType,
+    };
       const res = await api.post('/auth/verify-otp', payload);
       loginWithToken(res.data.token, res.data.user);
       toast.success(`Welcome back, ${res.data.user.name || 'there'}!`);
@@ -286,30 +302,21 @@ export default function LoginPage() {
             width: '100%', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto',
           }}>
             {[
-             { label: 'Employee', mobile: false, disabled: false },
-             { label: 'Support Agent', mobile: false, disabled: false },
-             { label: 'Mobile Access', mobile: true, disabled: false },
-            ].map(({ label, mobile, disabled }) => {
-              const active =
-                (label === 'Employee' && !useMobile && userType === 'employee') ||
-                (label === 'Support Agent' && !useMobile && userType === 'support_agent') ||
-                (label === 'Mobile Access' && useMobile);
+              { label: 'Employee', role: 'employee' },
+              { label: 'Support Agent', role: 'support_agent' },
+              { label: 'Administrator', role: 'admin' },
+            ].map(({ label, role }) => {
+              const active = userType === role;
+
               return (
                 <button
                   key={label}
-                  onClick={disabled ? undefined : () => {
-                    setUseMobile(mobile);
-
-  if (label === 'Employee') {
-    setUserType('employee');
-  } else if (label === 'Support Agent') {
-    setUserType('support_agent');
-  }
-
-  setStep('email');
-  setOtp(['','','','','','']);
-}}
-                  disabled={disabled}
+                  onClick={() => {
+                   setUserType(role);
+                   setUseMobile(false);
+                   setStep('email');
+                   setOtp(['', '', '', '', '', '']);
+                }}
                   style={{
                     paddingBottom: '12px',
                     fontSize: '0.75rem',
@@ -318,11 +325,11 @@ export default function LoginPage() {
                     fontWeight: 800,
                     border: 'none',
                     background: 'transparent',
-                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     transition: 'all 0.2s',
                     borderBottom: active ? '2px solid #1F4E79' : '2px solid transparent',
                     color: active ? '#1F4E79' : '#9ca3af',
-                    opacity: disabled ? 0.5 : 1,
+                    opacity: 1,
                   }}
                 >
                   {label}
@@ -342,14 +349,22 @@ export default function LoginPage() {
             >
               <div style={{ marginBottom: 'var(--s-8)', textAlign: 'center' }}>
                 <h2 style={{ fontSize: '2.25rem', fontWeight: 900 }}>
-                  {userType === 'support_agent'
-                  ? 'Support Agent Login'
-                  : 'Employee Login'}
+                  {
+                   userType === 'admin'
+                   ? 'Administrator Login'
+                   : userType === 'support_agent'
+                   ? 'Support Agent Login'
+                   : 'Employee Login'
+                  }
                 </h2>
                 <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem', lineHeight: 1.5 }}>
-                    {userType === 'support_agent'
+                    {
+                    userType === 'admin'
+                    ? 'Sign in as an Administrator to manage users, reports and system settings.'
+                    : userType === 'support_agent'
                     ? 'Sign in as a Support Agent to manage tickets and assignments.'
-                    : 'Enter your work email address to receive a secure sign-in code.'}
+                    : 'Enter your work email address to receive a secure sign-in code.'
+                    }  
                 </p>
               </div>
 

@@ -230,6 +230,40 @@ if (!existingAgent) {
   await agentUser.save();
   console.log('✅ Support Agent seeded: agent@vdartinc.com');
 }
+
+const existingAdmin = await User.findOne({
+  email: 'admin@vdartinc.com'
+});
+
+if (!existingAdmin) {
+  const adminUser = new User({
+    name: 'System Administrator',
+    email: 'admin@vdartinc.com',
+    password: 'Admin@123',
+
+    role: 'admin',
+    department: 'IT',
+    designation: 'System Administrator',
+
+    employeeId: 'ADMIN-001',
+
+    isVerified: true,
+    isActive: true,
+    createdByAdmin: true,
+
+    phone: '9876543212',
+
+    location: {
+      floor: 'Head Office',
+      branch: 'Main Office',
+      city: 'Chennai'
+    }
+  });
+
+  await adminUser.save();
+
+  console.log('✅ Admin account seeded: admin@vdartinc.com');
+}
  
 
       // 6. Seed Knowledge Base dummy data

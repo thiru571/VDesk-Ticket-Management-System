@@ -111,7 +111,9 @@ const verifyEmail = async (req, res, next) => {
 
 const sendOtp = async (req, res, next) => {
   try {
-    const { email } = req.body;
+     const { email, role } = req.body;
+     console.log("EMAIL:", email);
+     console.log("ROLE:", role);
 
     if (!email) {
       return res.status(400).json({
@@ -142,6 +144,13 @@ const isAllowedDomain = allowedDomains.some(domain =>
     const user = await User.findOne({
       email: normalizedEmail
     }).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
+
+    if (user && role && user.role !== role) {
+  return res.status(403).json({
+    success: false,
+    message: `This account belongs to the ${user.role.replace("_", " ")} portal. Please use the correct login option.`
+  });
+}
 
     if (!user || !user.isActive) {
       return res.status(404).json({
