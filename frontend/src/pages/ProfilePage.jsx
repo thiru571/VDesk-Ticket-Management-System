@@ -580,6 +580,7 @@ export default function ProfilePage() {
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
 
   const [profile, setProfile] = useState(() => buildProfileFromUser(user));
   const [passwords, setPasswords] = useState({
@@ -1017,76 +1018,132 @@ export default function ProfilePage() {
                       )}
                     </div>
                   </div>
-
                   {/* ── Section: Personal Info ── */}
-                  <div>
+                  {/* ── Section: Personal Info ── */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
                     <p style={sectionLabelStyle}>
                       <User size={11} />
                       Personal Information
                     </p>
-                  </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingPersonal((v) => !v)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "5px 12px",
+                        borderRadius: "8px",
+                        border: `1px solid ${isEditingPersonal ? "var(--primary)" : "var(--border)"}`,
+                        background: isEditingPersonal ? "#EEF2FF" : "white",
+                        color: isEditingPersonal
+                          ? "var(--primary)"
+                          : "var(--text-dim)",
+                        cursor: "pointer",
+                        fontSize: "0.78rem",
+                        fontWeight: 600,
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {isEditingPersonal ? (
+                        <>
+                          <X size={13} /> Cancel
+                        </>
+                      ) : (
+                        <>Edit</>
+                      )}
+                    </button>
+                  </div>{" "}
                   <div
                     style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
                       gap: "16px",
+                      opacity: isEditingPersonal ? 1 : 0.85,
                     }}
                   >
                     <Input
                       label="Full Name"
                       value={profile.fullName}
+                      readOnly={!isEditingPersonal}
+                      style={
+                        !isEditingPersonal
+                          ? { background: "#F9FAFB", cursor: "default" }
+                          : {}
+                      }
                       onChange={(e) =>
                         setProfile({ ...profile, fullName: e.target.value })
                       }
                     />
-
                     <Input
                       label="Email"
                       type="email"
                       value={profile.email}
+                      readOnly={!isEditingPersonal}
+                      style={
+                        !isEditingPersonal
+                          ? { background: "#F9FAFB", cursor: "default" }
+                          : {}
+                      }
                       onChange={(e) =>
                         setProfile({ ...profile, email: e.target.value })
                       }
                     />
-
                     <Input
                       label="Employee ID"
                       value={profile.employeeId}
                       readOnly
-                      style={{
-                        background: "#F9FAFB",
-                        cursor: "not-allowed",
-                      }}
+                      style={{ background: "#F9FAFB", cursor: "not-allowed" }}
                     />
-
                     <Input
                       label="Designation"
                       value={profile.designation}
+                      readOnly={!isEditingPersonal}
+                      style={
+                        !isEditingPersonal
+                          ? { background: "#F9FAFB", cursor: "default" }
+                          : {}
+                      }
                       onChange={(e) =>
                         setProfile({ ...profile, designation: e.target.value })
                       }
                     />
 
-                     <div className="input-group">
-  <label className="input-label">Phone Number</label>
-  <input
-    className="input"
-    placeholder="+91 9876543210"
-    value={profile.phone}
-    onChange={(e) =>
-      setProfile({
-        ...profile,
-        phone: e.target.value,
-      })
-    }
-  />
-</div>
+                    <div className="input-group">
+                      <label className="input-label">Phone Number</label>
+                      <input
+                        className="input"
+                        placeholder="+91 9876543210"
+                        value={profile.phone}
+                        readOnly={!isEditingPersonal}
+                        style={
+                          !isEditingPersonal
+                            ? { background: "#F9FAFB", cursor: "default" }
+                            : {}
+                        }
+                        onChange={(e) =>
+                          setProfile({ ...profile, phone: e.target.value })
+                        }
+                      />
+                    </div>
 
                     <div className="input-group">
                       <label className="input-label">Preferred Contact</label>
                       <select
                         className="input"
                         value={profile.preferredContact}
+                        disabled={!isEditingPersonal}
+                        style={
+                          !isEditingPersonal
+                            ? { background: "#F9FAFB", cursor: "default" }
+                            : {}
+                        }
                         onChange={(e) =>
                           setProfile({
                             ...profile,
@@ -1275,7 +1332,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
-
                   {/* ── Save button ── */}
                   <div
                     style={{
