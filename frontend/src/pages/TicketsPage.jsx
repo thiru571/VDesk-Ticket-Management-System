@@ -142,7 +142,7 @@ export default function TicketsPage() {
     try {
       if (action === 'delete') {
         if (!window.confirm('Are you sure you want to delete this ticket?')) return;
-        await ticketService.delete(ticketId);
+        await ticketService.deleteTicket(ticketId);
         toast.success('Ticket deleted');
         fetchTickets();
       } else if (action === 'resolve') {
@@ -519,13 +519,14 @@ export default function TicketsPage() {
                             </div>
                           )}
 
-                          {user?.role === 'admin' && (
-                            <div
-                              className="menu-item danger"
-                              onClick={(e) => handleAction(t._id, 'delete', e)}
+                          {user?.role === "admin" && (
+                            <button
+                              onClick={(e) => handleAction(t._id, "delete", e)}
+                              className="dropdown-item"
                             >
-                              <Trash2 size={14} /> Delete Ticket
-                            </div>
+                             <Trash2 size={16} />
+                             Delete Ticket
+                            </button>
                           )}
 
                           <div className="menu-divider" />

@@ -320,6 +320,26 @@ export default function TicketDetailPage() {
     }
   };
 
+  const handleDeleteTicket = async () => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this ticket?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await ticketService.deleteTicket(ticket._id);
+
+    toast.success("Ticket deleted successfully");
+
+    navigate("/tickets");
+  } catch (err) {
+    toast.error(
+      err.response?.data?.message || "Failed to delete ticket"
+    );
+  }
+};
+
   const formatTime = (secs) => {
     if (secs === null) return '--:--';
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -669,6 +689,15 @@ export default function TicketDetailPage() {
           {isAssignedAgent && ticket.status === 'on_hold' && (
             <Button size="sm" variant="success" onClick={handleResumeTicket}>Resume ticket</Button>
           )}
+          {isAdmin && (
+  <Button
+    variant="danger"
+    size="sm"
+    onClick={handleDeleteTicket}
+  >
+    Delete Ticket
+  </Button>
+)}
           <Button variant="outline" size="sm" onClick={() => navigate('/tickets')} leftIcon={<History size={15} />}>All tickets</Button>
         </div>
       </div>
