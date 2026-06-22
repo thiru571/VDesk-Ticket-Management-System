@@ -214,12 +214,12 @@ connectDB().then(() => {
 
 if (!existingAgent) {
   const agentUser = new User({
-    name: 'Support Agent',
+    name: 'Suresh',
     email: 'agent@vdartinc.com',
     password: 'Agent@123',
     role: 'support_agent',
     department: 'IT',
-    designation: 'Support Agent',
+    designation: 'Suresh',
     employeeId: 'AGENT-001',
     isVerified: true,
     isActive: true,

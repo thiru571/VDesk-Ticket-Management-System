@@ -335,6 +335,7 @@ const adminCreateUser = async (req, res, next) => {
     }
 
     await user.save();
+    
 
     // No email sent to employee — credentials are shared manually by Admin via ticket system
     res.status(201).json({

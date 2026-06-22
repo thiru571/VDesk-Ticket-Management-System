@@ -2,10 +2,28 @@ const mongoose = require('mongoose');
 
 const auditLogSchema = new mongoose.Schema({
   event: {
-    type: String,
-    enum: ['OTP_SENT', 'OTP_SUCCESS', 'OTP_FAILED', 'OTP_LOCKED', 'LOGIN_PASSWORD'],
-    required: true
-  },
+  type: String,
+  enum: [
+    'OTP_SENT',
+    'OTP_SUCCESS',
+    'OTP_FAILED',
+    'OTP_LOCKED',
+    'LOGIN_PASSWORD',
+
+    'TICKET_CREATED',
+    'TICKET_UPDATED',
+    'TICKET_DELETED',
+    'TICKET_ASSIGNED',
+    'STATUS_CHANGED',
+    'PRIORITY_CHANGED',
+    'COMMENT_ADDED',
+    'HOLD_REQUESTED',
+    'HOLD_APPROVED',
+    'HOLD_REJECTED',
+    'TICKET_REOPENED'
+  ],
+  required: true
+},
   email: { type: String, required: true },
   ip: { type: String, default: 'unknown' },
   userAgent: { type: String, default: '' },

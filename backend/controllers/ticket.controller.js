@@ -2,6 +2,7 @@ const Ticket = require('../models/Ticket.model');
 const User = require('../models/User.model');
 const Comment = require('../models/Comment.model');
 const Department = require('../models/Department');
+const AuditLog = require('../models/AuditLog.model');
 const {
   calculatePriorityScore,
   calculateSLADeadline,
@@ -271,6 +272,27 @@ const createTicket = async (req, res, next) => {
       'ticket_created',
       socketPayload
     );
+
+   // Audit Log
+try {
+  const log = await AuditLog.create({
+    event: 'TICKET_CREATED',
+    email: req.user.email,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'] || '',
+    meta: {
+      ticketId: ticket.ticketId,
+      title: ticket.title,
+      category: ticket.category,
+      priority: ticket.priority,
+      createdBy: req.user.name
+    }
+  });
+
+  console.log("✅ Audit Log Saved:", log.event);
+} catch (err) {
+  console.error("❌ Audit Log Error:", err);
+}
 
     // Response
     res.status(201).json({
