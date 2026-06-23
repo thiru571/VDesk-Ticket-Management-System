@@ -21,6 +21,7 @@ import ProfilePage from './pages/ProfilePage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminReports from './pages/AdminReports';
+import AdminAuditLogs from './pages/AdminAuditLogs';
 import AgentPerformancePage from './pages/AgentPerformancePage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import SettingsPage from './pages/SettingsPage';
@@ -75,6 +76,7 @@ const AppRoutes = () => (
       <Route path="admin/users"        element={<ProtectedRoute roles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
       <Route path="reports"            element={<ProtectedRoute roles={['admin']}><AdminReports /></ProtectedRoute>} />
       <Route path="analytics"          element={<ProtectedRoute roles={['admin']}><AdminAnalytics /></ProtectedRoute>} />
+      <Route path="admin/auditlogs"    element={<ProtectedRoute roles={['admin']}><AdminAuditLogs /></ProtectedRoute>}/>
       <Route path="admin/performance"  element={<ProtectedRoute roles={['admin']}><AgentPerformancePage /></ProtectedRoute>} />
       <Route path="settings"           element={<ProtectedRoute roles={['admin']}><SettingsPage /></ProtectedRoute>} />
     </Route>

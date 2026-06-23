@@ -141,8 +141,8 @@ export default function AdminAnalytics() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
-      </div>
     </motion.div>
   );
 }
