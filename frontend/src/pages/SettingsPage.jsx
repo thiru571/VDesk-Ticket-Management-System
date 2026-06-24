@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Shield, 
   Bell, 
@@ -18,10 +19,13 @@ import { useToast } from '../context/ToastContext';
 import { userService, settingsService } from '../services/ticketService';
 import { Button, Card, Input, Badge } from '../ui';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from "../context/ThemeContext";
 
 export default function SettingsPage() {
   const { user, logout, updateUser } = useAuth();
   const toast = useToast();
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
   const [activeTab, setActiveTab] = useState(isAdmin ? 'sla' : 'security');
   const [loading, setLoading] = useState(false);
@@ -149,9 +153,16 @@ export default function SettingsPage() {
               );
             }
             return (
-              <button 
+              <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                    if (tab.id === "profile") {
+                       navigate("/profile");
+                       return;
+                    }
+
+                  setActiveTab(tab.id);
+            }}
                 className={`premium-nav-item ${activeTab === tab.id ? 'active' : ''}`}
                 style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
               >
@@ -233,14 +244,24 @@ export default function SettingsPage() {
                <motion.div key="appearance" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                  <Card title="Visual Experience">
                     <div className="form-grid-2">
-                       <div className="p-6 cursor-pointer" style={{ border: '2px solid var(--primary)', borderRadius: '16px', background: 'white' }}>
+                       <div onClick={() => toggleTheme("light")}
+                            className="p-6 cursor-pointer"
+                            style={{border:theme === "light"? "2px solid var(--primary)": "1px solid var(--border)",borderRadius: "16px",background: "white",transition: "0.3s",cursor: "pointer",}}>
                           <div style={{ height: '40px', width: '60px', background: '#F1F5F9', borderRadius: '4px', marginBottom: '12px' }} />
                           <div style={{ fontWeight: 800 }}>System Default</div>
                           <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Matches your device settings.</p>
                        </div>
                        <div className="p-6 cursor-pointer" style={{ border: '1px solid var(--border)', borderRadius: '16px', background: '#0F172A', color: 'white' }}>
                           <div style={{ height: '40px', width: '60px', background: '#1E293B', borderRadius: '4px', marginBottom: '12px' }} />
-                          <div style={{ fontWeight: 800 }}>Midnight Dark</div>
+                          <div
+  onClick={() => toggleTheme("dark")}
+  className="p-6 cursor-pointer"
+  style={{
+    border:
+      theme === "dark"
+        ? "2px solid var(--primary)"
+        : "1px solid var(--border)",
+        borderRadius: "16px",background: "#0F172A",color: "white",transition: "0.3s",cursor: "pointer",}}></div>
                           <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Optimized for low-light environments.</p>
                        </div>
                     </div>

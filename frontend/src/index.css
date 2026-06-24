@@ -68,6 +68,36 @@
   --radius-lg: 16px;
 }
 
+/* =====================================================
+   DARK THEME
+===================================================== */
+
+[data-theme="dark"] {
+
+  /* Main Colors */
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --surface-alt: #273449;
+
+  /* Text */
+  --text-main: #F8FAFC;
+  --text-muted: #CBD5E1;
+  --text-dim: #94A3B8;
+
+  /* Borders */
+  --border: #334155;
+  --border-light: #475569;
+
+  /* Cards */
+  --card: #1E293B;
+
+  /* Primary */
+  --primary: #3B82F6;
+  --primary-hover: #2563EB;
+  --primary-light: rgba(59,130,246,.15);
+
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -79,8 +109,10 @@ body {
   background: var(--bg);
   color: var(--text-main);
   line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  transition:
+      background .3s ease,
+      color .3s ease;
 }
 
 /* --- Auth Page Layout --- */
@@ -165,7 +197,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: var(--s-12);
-  background: white;
+  background:var(--surface);
   position: relative;
   z-index: 10;
 }
@@ -292,7 +324,7 @@ textarea.input {
 
 /* --- Cards --- */
 .card {
-  background: var(--surface);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-sm);
@@ -508,7 +540,7 @@ textarea.input {
 .table-container {
   width: 100%;
   overflow-x: auto;
-  background: white;
+  background:var(--card);
   border-radius: var(--r-xl);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
@@ -549,7 +581,8 @@ textarea.input {
   padding: 16px;
 }
 .modal {
-  background: white;
+  background:var(--card);
+  color:var(--text-main);
   border-radius: var(--r-xl);
   width: 100%;
   max-width: 520px;

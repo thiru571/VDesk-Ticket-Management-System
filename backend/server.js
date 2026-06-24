@@ -39,6 +39,7 @@ const emailRoutes = require('./routes/email.routes');
 const knowledgeRoutes = require('./routes/knowledge.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const settingsRoutes = require('./routes/settings.routes');
+const auditRoutes = require('./routes/audit.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -120,6 +121,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/auditlogs', auditRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

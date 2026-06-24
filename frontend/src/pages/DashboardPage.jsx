@@ -14,7 +14,7 @@ import {
 import { motion } from "framer-motion";
 import { Button, Card, Badge } from "../ui";
 import { timeAgo, getInitials, getAvatarColor } from "../utils/helpers";
-
+import { generateDashboardReport } from "../utils/dashboardReport";
 const PRIORITY_COLORS = {
   critical: "var(--danger)",
   high: "var(--warning)",
@@ -182,6 +182,20 @@ export default function DashboardPage() {
     </div>
   );
 
+  const handleDownloadReport = () => {
+  generateDashboardReport({
+    user,
+    stats,
+    recentTickets,
+    priorityData,
+    agents,
+    chartData,
+    slaAlerts: stats?.slaAlerts || [],
+    shiftStats: stats?.shiftStats || [],
+    teamBreakdown: stats?.teamBreakdown || [],
+  });
+};
+
   // ════════════════════════════════════════════════════════════════════════
   // EMPLOYEE DASHBOARD
   // ════════════════════════════════════════════════════════════════════════
@@ -301,7 +315,9 @@ export default function DashboardPage() {
 
         {/* Right side: Download Report + Profile Avatar */}
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <button style={{
+          <button
+            onClick={handleDownloadReport}
+            style={{
             background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
             color: "white", backdropFilter: "blur(10px)", padding: "10px 20px",
             borderRadius: "10px", cursor: "pointer", fontWeight: 600,

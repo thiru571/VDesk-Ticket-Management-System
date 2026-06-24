@@ -40,6 +40,7 @@ const NAV_ITEMS = {
     { path: '/admin/users', label: 'Users',     icon: Users,           fa: 'fa-users' },
     { path: '/reports',    label: 'Reports',   icon: BarChart2,       fa: 'fa-chart-bar' },
     { path: '/analytics',  label: 'Analytics', icon: PieChart,        fa: 'fa-chart-line' },
+    {path: '/admin/auditlogs',label: 'Audit Logs',icon: Search,fa: 'fa-clipboard-list'},
     { path: '/admin/performance', label: 'Efficiency', icon: Zap,      fa: 'fa-bolt' },
     { path: '/settings',   label: 'Settings',  icon: Settings,        fa: 'fa-gear' },
   ]

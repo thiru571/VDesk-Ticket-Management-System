@@ -192,13 +192,35 @@ export default function AdminAuditLogs() {
 
     {/* Search */}
 
+    <div style={{ marginBottom: "16px" }}>
+    <h3
+        style={{
+            fontWeight: 700,
+            fontSize: "16px",
+            color: "#1F4E79"
+        }}
+    >
+        Filter Audit Logs
+    </h3>
+
+    <p
+        style={{
+            color: "var(--text-dim)",
+            fontSize: "13px"
+        }}
+    >
+        Search and filter audit events.
+    </p>
+</div>
+
     <div
       style={{
-        background: "white",
-        borderRadius: "16px",
-        padding: "24px",
-        marginBottom: "24px",
-        boxShadow: "var(--shadow-sm)",
+         background: "white",
+         borderRadius: "16px",
+         padding: "20px",
+         marginBottom: "24px",
+         border: "1px solid var(--border)",
+         boxShadow: "var(--shadow-sm)"
       }}
     >
       <div
@@ -210,20 +232,40 @@ export default function AdminAuditLogs() {
         }}
       >
         <input
-          type="text"
-          placeholder="Search by Email or Event..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="form-input"
-          style={{ flex: 1 }}
-        />
+  type="text"
+  placeholder="🔍 Search by email or event..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  style={{
+    flex: 1,
+    height: "46px",
+    padding: "0 16px",
+    border: "1px solid var(--border)",
+    borderRadius: "10px",
+    background: "#F8FAFC",
+    color: "var(--text)",
+    fontSize: "14px",
+    outline: "none",
+    transition: "0.2s ease"
+  }}
+/>
 
-        <select
-          value={eventFilter}
-          onChange={(e) => setEventFilter(e.target.value)}
-          className="form-input"
-          style={{ width: "240px" }}
-        >
+<select
+  value={eventFilter}
+  onChange={(e) => setEventFilter(e.target.value)}
+  style={{
+    width: "220px",
+    height: "46px",
+    padding: "0 14px",
+    border: "1px solid var(--border)",
+    borderRadius: "10px",
+    background: "#F8FAFC",
+    color: "var(--text)",
+    fontSize: "14px",
+    cursor: "pointer",
+    outline: "none"
+  }}
+>
           <option value="ALL">All Events</option>
 
           <option value="OTP_SUCCESS">OTP_SUCCESS</option>
@@ -255,6 +297,7 @@ export default function AdminAuditLogs() {
         </select>
       </div>
     </div>
+    
 
         {/* Audit Log Table */}
 
