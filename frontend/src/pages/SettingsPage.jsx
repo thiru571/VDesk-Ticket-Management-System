@@ -135,12 +135,176 @@ export default function SettingsPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="page-layout">
-      <div className="flex-between mb-8">
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-0.02em' }}>Settings</h1>
-          <p style={{ color: 'var(--text-dim)' }}>Manage your personal preferences and system-wide configurations.</p>
-        </div>
+      {/* ================================================= */}
+{/* SETTINGS HERO */}
+{/* ================================================= */}
+
+<div
+  style={{
+    background:
+      "linear-gradient(135deg,#1F4E79 0%, #2563EB 100%)",
+    color: "white",
+    borderRadius: "22px",
+    padding: "32px",
+    marginBottom: "28px",
+    boxShadow: "0 20px 40px rgba(37,99,235,.18)"
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    }}
+  >
+    <div>
+      <div
+        style={{
+          fontSize: "2rem",
+          fontWeight: 900
+        }}
+      >
+        ⚙ Settings
       </div>
+
+      <p
+        style={{
+          marginTop: "10px",
+          color: "#D6E4FF",
+          maxWidth: "650px",
+          lineHeight: 1.6
+        }}
+      >
+        Manage user preferences, security policies,
+        notifications and enterprise infrastructure
+        from a single control center.
+      </p>
+    </div>
+
+    <div
+      style={{
+        textAlign: "right"
+      }}
+    >
+      <div
+        style={{
+          fontSize: "3rem"
+        }}
+      >
+        ⚙️
+      </div>
+
+      <div
+        style={{
+          marginTop: "8px",
+          fontWeight: 700
+        }}
+      >
+        System Healthy
+      </div>
+
+      <div
+        style={{
+          color: "#B9D6FF",
+          fontSize: ".85rem"
+        }}
+      >
+        All Services Online
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: "20px",
+    marginBottom: "32px"
+  }}
+>
+
+<div className="enterprise-card">
+  <div style={{fontSize:".8rem",color:"var(--text-dim)"}}>
+    Administrator
+  </div>
+
+  <div
+    style={{
+      fontWeight:900,
+      fontSize:"1.35rem",
+      marginTop:"8px"
+    }}
+  >
+    {user?.name}
+  </div>
+
+  <Badge color="green">
+    Active
+  </Badge>
+</div>
+
+<div className="enterprise-card">
+  <div style={{fontSize:".8rem",color:"var(--text-dim)"}}>
+    Security
+  </div>
+
+  <div
+    style={{
+      fontWeight:900,
+      fontSize:"1.35rem",
+      marginTop:"8px"
+    }}
+  >
+    Protected
+  </div>
+
+  <Badge>
+    Password Enabled
+  </Badge>
+</div>
+
+<div className="enterprise-card">
+  <div style={{fontSize:".8rem",color:"var(--text-dim)"}}>
+    Notifications
+  </div>
+
+  <div
+    style={{
+      fontWeight:900,
+      fontSize:"1.35rem",
+      marginTop:"8px"
+    }}
+  >
+    Enabled
+  </div>
+
+  <Badge color="blue">
+    Email Active
+  </Badge>
+</div>
+
+<div className="enterprise-card">
+  <div style={{fontSize:".8rem",color:"var(--text-dim)"}}>
+    Infrastructure
+  </div>
+
+  <div
+    style={{
+      fontWeight:900,
+      fontSize:"1.35rem",
+      marginTop:"8px"
+    }}
+  >
+    Healthy
+  </div>
+
+  <Badge color="green">
+    MongoDB Online
+  </Badge>
+</div>
+
+</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '48px' }}>
         <div className="flex-col gap-2">
@@ -243,29 +407,98 @@ export default function SettingsPage() {
             {activeTab === 'appearance' && (
                <motion.div key="appearance" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                  <Card title="Visual Experience">
-                    <div className="form-grid-2">
-                       <div onClick={() => toggleTheme("light")}
-                            className="p-6 cursor-pointer"
-                            style={{border:theme === "light"? "2px solid var(--primary)": "1px solid var(--border)",borderRadius: "16px",background: "white",transition: "0.3s",cursor: "pointer",}}>
-                          <div style={{ height: '40px', width: '60px', background: '#F1F5F9', borderRadius: '4px', marginBottom: '12px' }} />
-                          <div style={{ fontWeight: 800 }}>System Default</div>
-                          <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Matches your device settings.</p>
-                       </div>
-                       <div className="p-6 cursor-pointer" style={{ border: '1px solid var(--border)', borderRadius: '16px', background: '#0F172A', color: 'white' }}>
-                          <div style={{ height: '40px', width: '60px', background: '#1E293B', borderRadius: '4px', marginBottom: '12px' }} />
-                          <div
-  onClick={() => toggleTheme("dark")}
-  className="p-6 cursor-pointer"
-  style={{
-    border:
-      theme === "dark"
-        ? "2px solid var(--primary)"
-        : "1px solid var(--border)",
-        borderRadius: "16px",background: "#0F172A",color: "white",transition: "0.3s",cursor: "pointer",}}></div>
-                          <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Optimized for low-light environments.</p>
-                       </div>
-                    </div>
-                    <div style={{ marginTop: '24px' }}>
+                   <div className="form-grid-2">
+
+  {/* Light Theme */}
+
+  <div
+    onClick={() => toggleTheme("light")}
+    className="p-6 cursor-pointer"
+    style={{
+      border:
+        theme === "light"
+          ? "2px solid var(--primary)"
+          : "1px solid var(--border)",
+      borderRadius: "16px",
+      background: "white",
+      transition: "0.3s",
+      cursor: "pointer",
+      padding: "24px"
+    }}
+  >
+    <div
+      style={{
+        height: "40px",
+        width: "60px",
+        background: "#F1F5F9",
+        borderRadius: "4px",
+        marginBottom: "12px"
+      }}
+    />
+
+    <div style={{ fontWeight: 800 }}>
+      System Default
+    </div>
+
+    <p
+      style={{
+        fontSize: ".75rem",
+        color: "var(--text-dim)"
+      }}
+    >
+      Matches your device settings.
+    </p>
+  </div>
+
+  {/* Dark Theme */}
+
+  <div
+    onClick={() => toggleTheme("dark")}
+    className="p-6 cursor-pointer"
+    style={{
+      border:
+        theme === "dark"
+          ? "2px solid var(--primary)"
+          : "1px solid var(--border)",
+      borderRadius: "16px",
+      background: "#0F172A",
+      color: "white",
+      transition: "0.3s",
+      cursor: "pointer",
+      padding: "24px"
+    }}
+  >
+    <div
+      style={{
+        height: "40px",
+        width: "60px",
+        background: "#1E293B",
+        borderRadius: "4px",
+        marginBottom: "12px"
+      }}
+    />
+
+    <div
+      style={{
+        fontWeight: 800
+      }}
+    >
+      Midnight Dark
+    </div>
+
+    <p
+      style={{
+        fontSize: ".75rem",
+        opacity: .8
+      }}
+    >
+      Optimized for low-light environments.
+    </p>
+  </div>
+
+</div>
+
+<div style={{ marginTop: "24px" }}>
                        <label className="input-label">Regional Language</label>
                        <select className="input">
                           <option>English (United States)</option>

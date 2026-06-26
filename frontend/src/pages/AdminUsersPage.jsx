@@ -329,6 +329,22 @@ export default function AdminUsersPage() {
     ).join("");
   };
 
+  const generateEmployeeId = () => {
+  const prefix =
+    createForm.role === "admin"
+      ? "ADMIN"
+      : createForm.role === "support_agent"
+      ? "AGENT"
+      : "EMP";
+
+  const random = Math.floor(1000 + Math.random() * 9000);
+
+  setCreateForm((prev) => ({
+    ...prev,
+    employeeId: `${prefix}-${random}`,
+  }));
+};
+
   const handleCreate = async () => {
     if (!createForm.email || !createForm.name)
       return toast.error("Email and name are required");
@@ -1701,9 +1717,10 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
                 <div className="form-grid-2">
-                  <div className="form-grid-2">
+
   <div className="input-group">
     <label className="input-label">Designation</label>
+
     <input
       className="input"
       placeholder="e.g. Developer"
@@ -1720,68 +1737,76 @@ export default function AdminUsersPage() {
   <div className="input-group">
     <label className="input-label">Employee ID</label>
 
+    <div
+      style={{
+        display: "flex",
+        gap: "8px",
+        alignItems: "center",
+      }}
+    >
+      <input
+        className="input"
+        placeholder="AGENT-1001"
+        value={createForm.employeeId}
+        onChange={(e) =>
+          setCreateForm({
+            ...createForm,
+            employeeId: e.target.value,
+          })
+        }
+        style={{ flex: 1 }}
+      />
+
+      <button
+        type="button"
+        onClick={generateEmployeeId}
+        style={{
+          background: "var(--bg)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--r-md)",
+          padding: "0 12px",
+          cursor: "pointer",
+          fontWeight: 700,
+          color: "var(--primary)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        Generate
+      </button>
+    </div>
+  </div>
+
+  <div className="input-group">
+    <label className="input-label">
+      Password
+      <span
+        style={{
+          color: "var(--text-dim)",
+          fontWeight: 400,
+        }}
+      >
+        {" "}
+        (leave blank to auto-generate)
+      </span>
+    </label>
+
     <input
       className="input"
-      placeholder="EMP001"
-      value={createForm.employeeId}
+      type="text"
+      placeholder="Auto-generated if empty"
+      value={createForm.password}
       onChange={(e) =>
         setCreateForm({
           ...createForm,
-          employeeId: e.target.value
+          password: e.target.value,
         })
       }
     />
   </div>
+
 </div>
-                  <div className="input-group">
-                    <label className="input-label">
-                      Password{" "}
-                      <span
-                        style={{ color: "var(--text-dim)", fontWeight: 400 }}
-                      >
-                        (leave blank to auto-generate)
-                      </span>
-                    </label>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <input
-                        className="input"
-                        type="text"
-                        placeholder="Auto-generated if empty"
-                        value={createForm.password}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            password: e.target.value,
-                          })
-                        }
-                        style={{ flex: 1 }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setCreateForm({
-                            ...createForm,
-                            password: generatePassword(),
-                          })
-                        }
-                        style={{
-                          background: "var(--bg)",
-                          border: "1px solid var(--border)",
-                          borderRadius: "var(--r-md)",
-                          padding: "0 12px",
-                          cursor: "pointer",
-                          fontSize: "0.78rem",
-                          fontWeight: 700,
-                          color: "var(--primary)",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Generate
-                      </button>
-                    </div>
-                  </div>
                 </div>
-              </div>
+              
             )}
             <div className="modal-footer">
               <Button
@@ -1837,7 +1862,9 @@ export default function AdminUsersPage() {
                 <br />
                 <span style={{ fontSize: "0.85rem", color: "var(--text-dim)" }}>
                   This action cannot be undone.
+                  
                 </span>
+                
               </p>
             </div>
             <div className="modal-footer">
