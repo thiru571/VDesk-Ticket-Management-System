@@ -245,7 +245,7 @@ if (!existingAdmin) {
 
     role: 'admin',
     department: 'IT',
-    designation: 'System Administrator',
+    designation: 'Guru',
 
     employeeId: 'ADMIN-001',
 

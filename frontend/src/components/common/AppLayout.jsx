@@ -139,7 +139,11 @@ export default function AppLayout() {
       </AnimatePresence>
 
       {/* PREMIUM SIDEBAR */}
-      <aside className={`premium-sidebar hide-mobile ${collapsed ? 'collapsed' : ''}`} style={mobileOpen ? { display: 'flex', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 50 } : {}}>
+      <aside
+  className={`premium-sidebar hide-mobile ${collapsed ? "collapsed" : ""}`}
+  style={{display: "flex",flexDirection: "column",height: "100vh",overflow: "hidden",...(mobileOpen? {position: "fixed",left: 0,top: 0,bottom: 0,zIndex: 50,}: {}),
+  }}
+>
         <div 
           className="premium-sidebar-brand"
           onClick={() => {
@@ -157,7 +161,9 @@ export default function AppLayout() {
           <span style={{ fontWeight: 900, letterSpacing: '-0.5px' }}>VDesk</span>
         </div>
 
-        <nav className="premium-nav">
+        <nav className="premium-nav"
+        style={{flex: 1,overflowY: "auto",paddingRight: "4px",}}
+        >
           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', paddingLeft: '16px' }}>
             Main Menu
           </div>
@@ -228,7 +234,7 @@ export default function AppLayout() {
           </button>
         </nav>
 
-        <div style={{ marginTop: 'auto', padding: '32px 24px', borderTop: '1px solid var(--border-light)' }}>
+        <div style={{padding: "24px",borderTop: "1px solid var(--border-light)",background: "var(--surface)",flexShrink: 0,}}>
           <button
             className="premium-nav-item"
             onClick={() => { setLoggingOut(true); setTimeout(logout, 800); }}
