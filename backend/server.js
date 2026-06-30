@@ -188,91 +188,11 @@ connectDB().then(() => {
       
     } catch (e) { console.error('❌ HealthCheck Error:', e.message); }
 
-    // 5. Seed dummy user for dev/testing (in-memory DB loses data on restart)
-    try {
-      const existing = await User.findOne({ email: 'dummy@vdartinc.com' });
-      if (!existing) {
-        const dummyUser = new User({
-          name: 'Dummy Employee',
-          email: 'dummy@vdartinc.com',
-          password: 'Dummy@1234',
-          role: 'employee',
-          department: 'IT',
-          designation: 'Software Engineer',
-          employeeId: 'EMP-DUMMY-001',
-          isVerified: true,
-          isActive: true,
-          createdByAdmin: true,
-          phone: '9876543210',
-          location: { floor: '3rd Floor', branch: 'Main Office', city: 'Chennai' }
-        });
-        await dummyUser.save();
-        console.log('✅ Dummy account seeded: dummy@vdartinc.com');
-      }
-
-  const existingAgent = await User.findOne({
-  email: 'agent@vdartinc.com'
-});
-
-if (!existingAgent) {
-  const agentUser = new User({
-    name: 'Suresh',
-    email: 'agent@vdartinc.com',
-    password: 'Agent@123',
-    role: 'support_agent',
-    department: 'IT',
-    designation: 'Suresh',
-    employeeId: 'AGENT-001',
-    isVerified: true,
-    isActive: true,
-    createdByAdmin: true,
-    phone: '9876543211'
-  });
-
-  await agentUser.save();
-  console.log('✅ Support Agent seeded: agent@vdartinc.com');
-}
-
-const existingAdmin = await User.findOne({
-  email: 'admin@vdartinc.com'
-});
-
-if (!existingAdmin) {
-  const adminUser = new User({
-    name: 'System Administrator',
-    email: 'admin@vdartinc.com',
-    password: 'Admin@123',
-
-    role: 'admin',
-    department: 'IT',
-    designation: 'Guru',
-
-    employeeId: 'ADMIN-001',
-
-    isVerified: true,
-    isActive: true,
-    createdByAdmin: true,
-
-    phone: '9876543212',
-
-    location: {
-      floor: 'Head Office',
-      branch: 'Main Office',
-      city: 'Chennai'
-    }
-  });
-
-  await adminUser.save();
-
-  console.log('✅ Admin account seeded: admin@vdartinc.com');
-}
- 
 
       // 6. Seed Knowledge Base dummy data
       const seedKnowledgeBase = require('./scripts/seedKnowledge');
       await seedKnowledgeBase();
       
-    } catch (seedErr) { console.error('❌ Seeding error:', seedErr.message); }
   })();
 });
 

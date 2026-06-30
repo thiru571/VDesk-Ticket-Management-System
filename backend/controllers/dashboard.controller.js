@@ -88,8 +88,21 @@ const getEmployeeDashboard = async (req, res, next) => {
 // @access  Private (admin/agent)
 const getAdminDashboard = async (req, res, next) => {
   try {
-    const isAgent = req.user.role === 'support_agent';
-    const matchBase = isAgent ? { assignedTo: req.user._id } : {};
+    const isAgent = req.user.role === "support_agent";
+
+let matchBase = {};
+
+if (isAgent) {
+  // Support agents see only their assigned tickets
+  matchBase = {
+    assignedTo: req.user._id,
+  };
+} else if (req.user.role === "admin") {
+  // Admins see only tickets for their department
+  matchBase = {
+    category: req.user.department,
+  };
+}
 
     const [
       statusCounts, priorityCounts, slaBreached,
