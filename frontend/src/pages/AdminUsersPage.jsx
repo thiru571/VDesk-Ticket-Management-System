@@ -954,12 +954,12 @@ export default function AdminUsersPage() {
           >
             <colgroup>
               <col style={{ width: "44px" }} />
-              <col style={{ width: "240px" }} />
+              <col style={{ width: "230px" }} />
               <col style={{ width: "130px" }} />
               <col style={{ width: "110px" }} />
               <col style={{ width: "110px" }} />
-              <col style={{ width: "110px" }} />
-              <col style={{ width: "160px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "120px" }} />
               <col style={{ width: "52px" }} />
             </colgroup>
             <thead>
