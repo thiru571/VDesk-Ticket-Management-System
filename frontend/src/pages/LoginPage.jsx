@@ -388,26 +388,28 @@ export default function LoginPage() {
                   Send Sign-in Code
                 </Button>
 
-                <p
+               <div
   style={{
-    textAlign: 'center',
-    marginTop: '20px',
-    fontSize: '0.9rem',
-    color: '#6B7280'
+    textAlign: "center",
+    marginTop: "20px",
   }}
 >
-  New Employee?{" "}
-  <span
-    onClick={() => navigate('/register')}
+  <button
+    type="button"
+    className="mobile-login-btn"
+    onClick={() => setUseMobile(true)}
     style={{
-      color: '#1F4E79',
-      fontWeight: '700',
-      cursor: 'pointer'
+      background: "none",
+      border: "none",
+      color: "#2563eb",
+      fontWeight: "600",
+      cursor: "pointer",
+      fontSize: "15px",
     }}
   >
-    Register Now
-  </span>
-</p>
+    📱 Login with Mobile OTP
+  </button>
+</div>
               </form>
             </motion.div>
           )}
@@ -425,7 +427,7 @@ export default function LoginPage() {
                   Mobile Sign-in
                 </h2>
                 <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem', lineHeight: 1.5 }}>
-                  Enter your phone number to receive a sign-in code via SMS.
+                  Enter your registered mobile number. The system will identify your account and send the OTP to your registered email address.
                 </p>
               </div>
               <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -441,6 +443,26 @@ export default function LoginPage() {
                 <Button type="submit" isLoading={loading} style={{ width: '100%', height: '52px' }}>
                   Send OTP Code
                 </Button>
+                <div
+  style={{
+    textAlign: "center",
+    marginTop: "20px",
+  }}
+>
+  <button
+    type="button"
+    onClick={() => setUseMobile(false)}
+    style={{
+      background: "none",
+      border: "none",
+      color: "#2563eb",
+      cursor: "pointer",
+      fontWeight: "600",
+    }}
+  >
+    ← Login using Work Email
+  </button>
+</div>
               </form>
             </motion.div>
           )}

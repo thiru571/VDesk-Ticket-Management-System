@@ -111,18 +111,42 @@ const verifyEmail = async (req, res, next) => {
 
 const sendOtp = async (req, res, next) => {
   try {
-     const { email, role } = req.body;
+     const { email, mobile, role } = req.body;
      console.log("EMAIL:", email);
      console.log("ROLE:", role);
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required'
-      });
-    }
+    let normalizedEmail = "";
 
-    const normalizedEmail = email.toLowerCase().trim();
+if (mobile) {
+  console.log("Mobile received:", mobile);
+  const mobileUser = await User.findOne({ phone: mobile });
+  console.log("User found:", mobileUser);
+
+  if (!mobileUser) {
+    return res.status(404).json({
+      success: false,
+      message: "No account found with this mobile number."
+    });
+  }
+
+  normalizedEmail = mobileUser.email;
+
+  console.log("📱 Mobile Login");
+  console.log("Mobile:", mobile);
+  console.log("Email Found:", normalizedEmail);
+
+} else if (email) {
+
+  normalizedEmail = email.toLowerCase().trim();
+
+} else {
+
+  return res.status(400).json({
+    success: false,
+    message: "Email or Mobile Number is required."
+  });
+
+}
 
     const allowedDomains = [
   '@vdartinc.com',
@@ -222,11 +246,47 @@ const isAllowedDomain = allowedDomains.some(domain =>
 
 const verifyOtp = async (req, res, next) => {
   try {
-    const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    const { email, mobile, otp } = req.body;
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail }).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
+if (!otp) {
+  return res.status(400).json({
+    success: false,
+    message: "OTP is required"
+  });
+}
+
+let normalizedEmail = "";
+
+if (mobile) {
+
+  const mobileUser = await User.findOne({ phone: mobile });
+
+  if (!mobileUser) {
+    return res.status(404).json({
+      success: false,
+      message: "No account found with this mobile number."
+    });
+  }
+
+  normalizedEmail = mobileUser.email;
+
+} else if (email) {
+
+  normalizedEmail = email.toLowerCase().trim();
+
+} else {
+
+  return res.status(400).json({
+    success: false,
+    message: "Email or Mobile Number is required."
+  });
+
+}
+
+const user = await User.findOne({
+  email: normalizedEmail
+}).select('+otp +otpExpiry +otpAttempts +otpLockedUntil');
+    
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     if (user.otpLockedUntil && user.otpLockedUntil > new Date()) {
